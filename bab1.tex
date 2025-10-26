@@ -2,46 +2,42 @@
 
 \section{Latar Belakang}
 
-Peningkatan harapan hidup global telah menjadi salah satu pencapaian penting dalam bidang kesehatan dan sosial pada abad ke-21. Fenomena ini ditandai dengan bertambahnya jumlah individu yang mencapai usia sangat lanjut, termasuk kelompok supercentenarian yaitu individu berusia 110 tahun atau lebih \citep{Young2021}. Data menunjukkan bahwa jumlah supercentenarian yang tervalidasi meningkat secara signifikan, dengan kasus pertama tercatat pada tahun 1960 dan terus berkembang hingga saat ini. Kondisi ini membawa implikasi penting bagi sistem jaminan sosial, industri asuransi jiwa, dan dana pensiun yang harus mengantisipasi risiko umur panjang (\textit{longevity risk}) dengan lebih cermat.
+Peningkatan harapan hidup global merupakan pencapaian penting abad ke-21, ditandai dengan bertambahnya individu yang mencapai usia sangat lanjut, termasuk supercentenarian (usia $\geq$ 110 tahun) yang meningkat signifikan sejak 1960 \citep{Young2021}. Fenomena ini membawa implikasi krusial bagi industri asuransi jiwa dan dana pensiun yang menghadapi \textit{longevity risk}—ketidakpastian proyeksi harapan hidup yang lebih tinggi dari perkiraan. Ketika individu hidup lebih lama, institusi yang memberikan jaminan pembayaran jangka panjang (anuitas, pensiun) menghadapi beban finansial lebih besar, menjadikan pemodelan mortalitas usia lanjut yang akurat kebutuhan fundamental untuk manajemen risiko yang efektif.
 
-Risiko umur panjang mengacu pada ketidakpastian terkait dengan proyeksi harapan hidup yang lebih tinggi dari perkiraan semula. Ketika individu hidup lebih lama dari yang diperkirakan, institusi keuangan yang memberikan jaminan pembayaran jangka panjang seperti anuitas dan dana pensiun menghadapi beban finansial yang lebih besar. Oleh karena itu, pemodelan mortalitas pada usia lanjut yang akurat menjadi kebutuhan mendasar untuk mengukur dan mengelola risiko ini secara efektif.
+Model mortalitas klasik—Gompertz-Makeham, Heligman-Pollard, Coale-Kisker—telah lama digunakan dalam praktik aktuaria. Namun, model-model ini memiliki keterbatasan mendasar: (1) tidak dapat menangkap deselerasi mortalitas pada usia lanjut ekstrem, dimana laju peningkatan tingkat kematian melambat atau mendekati konstan \citep{Thatcher1999}, dan (2) menetapkan usia maksimum tabel mortalitas (\textit{highest attained age}, $\omega$) secara subjektif tanpa landasan statistik, menghasilkan estimasi tidak reliabel pada ekor distribusi.
 
-Model mortalitas klasik seperti Gompertz-Makeham, Heligman-Pollard, dan model logistik telah lama digunakan dalam praktik aktuaria untuk memodelkan pola kematian manusia. Namun, model-model tersebut menunjukkan keterbatasan dalam menangkap fenomena deselerasi mortalitas pada usia lanjut ekstrem, yaitu kondisi di mana laju peningkatan tingkat kematian melambat atau bahkan mendekati konstan pada usia sangat tinggi \citep{Thatcher1999}. Selain itu, model-model klasik umumnya menetapkan batas usia maksimum tabel mortalitas (\textit{highest attained age}, $\omega$) secara subjektif tanpa landasan statistik yang kuat, sehingga berpotensi menghasilkan estimasi yang kurang reliabel pada ekor distribusi usia kematian.
+\textit{Extreme Value Theory} (EVT) menawarkan solusi prinsipiil sebagai cabang statistik yang dirancang khusus untuk menganalisis perilaku ekor distribusi dan kejadian ekstrem. EVT memberikan justifikasi teoretis untuk memodelkan mortalitas usia sangat lanjut menggunakan \textit{Generalized Pareto Distribution} (GPD). Model \textit{Threshold Life Table} (TLT) mengadopsi pendekatan ini dengan menggabungkan Gompertz untuk usia non-ekstrem ($x \leq u$) dan GPD untuk usia lanjut ekstrem ($x > u$) pada usia ambang $u$. Meskipun fleksibel, TLT memiliki kelemahan: diskontinuitas fungsi \textit{hazard} di titik threshold yang tidak realistis secara biologis dan mengurangi kualitas proyeksi.
 
-Untuk mengatasi keterbatasan tersebut, pendekatan berbasis \textit{extreme value theory} (EVT) mulai diterapkan dalam pemodelan mortalitas usia lanjut. EVT merupakan cabang statistik yang secara khusus dirancang untuk menganalisis perilaku ekor distribusi dan kejadian ekstrem. Dalam konteks mortalitas, EVT memberikan kerangka kerja yang lebih sesuai untuk memodelkan individu yang mencapai usia sangat lanjut dengan menggunakan \textit{generalized Pareto distribution} (GPD). Salah satu model yang mengadopsi EVT adalah \textit{threshold life table} (TLT), yang dikembangkan untuk menggabungkan model Gompertz pada usia non-ekstrem dengan GPD pada usia lanjut ekstrem, dengan pemisahan kedua komponen dilakukan pada suatu usia ambang (\textit{threshold age}, $u$).
+Model \textit{Smoothed Threshold Life Table} (STLT) dikembangkan oleh \citet{huang2020modelling} untuk mengatasi masalah ini dengan menambahkan \textit{smoothing constraint} $\theta = 1/(BC^u)$ yang memastikan kontinuitas fungsi hazard: $h(u^-) = BC^u = h(u^+) = 1/\theta$. Constraint ini mengeliminasi loncatan mendadak pada usia ambang, menghasilkan transisi mulus antara kedua komponen distribusi. Untuk mengakomodasi perubahan pola mortalitas antarkohor dan peramalan masa depan, STLT diperluas menjadi \textit{Dynamic Smooth Threshold Life Table} (DSTLT) yang memodelkan parameter tertentu sebagai fungsi indeks kohor, menangkap tren mortalitas jangka panjang dan memungkinkan proyeksi untuk kohor mendatang.
 
-Meskipun model TLT memberikan fleksibilitas dalam memodelkan mortalitas usia lanjut, model ini memiliki kelemahan potensial berupa ketidakmulusingan (\textit{discontinuity}) pada fungsi \textit{hazard} di titik usia ambang. Ketidakmulusingan ini dapat menimbulkan interpretasi yang kurang realistis secara biologis dan mengurangi kualitas proyeksi mortalitas. Untuk mengatasi masalah tersebut, dikembangkan model \textit{smoothed threshold life table} (STLT) yang menambahkan kendala kehalusan (\textit{smoothing constraint}) sehingga memastikan transisi yang mulus antara komponen Gompertz dan GPD pada usia ambang.
-
-Lebih lanjut, untuk mengakomodasi perubahan pola mortalitas antar kohor dan memungkinkan peramalan mortalitas ke masa depan, model STLT diperluas menjadi model dinamis yang disebut \textit{dynamic smooth threshold life table} (DSTLT). Model ini memperkenalkan komponen waktu dengan memodelkan parameter tertentu sebagai fungsi dari indeks kohor, sehingga mampu menangkap tren mortalitas jangka panjang dan melakukan proyeksi untuk kohor-kohor mendatang.
-
-Penelitian ini bertujuan untuk mengkaji secara mendalam konstruksi, estimasi parameter, dan evaluasi kinerja model STLT dan DSTLT dalam konteks pemodelan mortalitas usia lanjut. Kajian ini diharapkan dapat memberikan kontribusi pada pemahaman yang lebih baik mengenai penerapan EVT dalam aktuaria, serta menyediakan alternatif model yang lebih robust untuk mengukur dan mengelola risiko umur panjang dalam industri asuransi dan dana pensiun.
+Penelitian ini mengkaji secara mendalam konstruksi, estimasi parameter, dan evaluasi kinerja model STLT dan DSTLT. Kajian meliputi derivasi matematis constraint smoothing, prosedur estimasi MLE dengan profile likelihood untuk threshold selection, perbandingan in-sample fit terhadap model statis (Gompertz-Makeham, Heligman-Pollard, Coale-Kisker), dan evaluasi out-of-sample forecasting DSTLT dibandingkan model dinamis Cairns-Blake-Dowd (CBD). Kontribusi penelitian ini adalah pemahaman komprehensif penerapan EVT dalam aktuaria dan penyediaan alternatif model yang lebih robust untuk manajemen risiko longevitas dalam industri asuransi dan dana pensiun.
 
 \section{Rumusan Masalah}
 
-Berdasarkan latar belakang yang telah diuraikan, penelitian ini difokuskan pada kajian mendalam terhadap model STLT dan DSTLT dalam konteks pemodelan mortalitas usia lanjut. Rumusan masalah penelitian ini dijabarkan dalam pertanyaan-pertanyaan berikut:
+Berdasarkan latar belakang, rumusan masalah penelitian adalah:
 
 \begin{enumerate}
-    \item Bagaimana konstruksi matematis model STLT dan DSTLT, khususnya terkait penambahan kendala kehalusan pada fungsi \textit{hazard} dan pemodelan parameter dinamis?
-    
-    \item Bagaimana prosedur estimasi parameter untuk model STLT dan DSTLT menggunakan metode \textit{maximum likelihood estimation} (MLE) dengan mempertimbangkan karakteristik data mortalitas yang tersensor interval dan kanan, serta penentuan usia ambang optimal?
-    
-    \item Bagaimana kinerja model STLT dibandingkan dengan model mortalitas statis lain seperti Gompertz-Makeham, Heligman-Pollard, dan Coale-Kisker dalam hal kesesuaian terhadap data historis?
-    
-    \item Bagaimana kinerja model DSTLT dalam hal kesesuaian \textit{in-sample} dan kemampuan peramalan \textit{out-of-sample}, khususnya dibandingkan dengan model mortalitas dinamis yang relevan seperti model Cairns-Blake-Dowd (CBD)?
+    \item Bagaimana konstruksi matematis model STLT dan DSTLT, khususnya derivasi \textit{smoothing constraint} $\theta = 1/(BC^u)$ untuk kontinuitas fungsi hazard dan formulasi parameter dinamis untuk proyeksi antarkohor?
+
+    \item Bagaimana prosedur estimasi parameter menggunakan MLE dengan data tersensor interval dan kanan, serta pemilihan usia ambang optimal $u$ melalui \textit{profile likelihood}?
+
+    \item Bagaimana kinerja in-sample STLT dibandingkan model statis (Gompertz-Makeham, Heligman-Pollard, Coale-Kisker) berdasarkan kriteria AIC, BIC, dan SSE?
+
+    \item Bagaimana kinerja in-sample dan out-of-sample DSTLT dibandingkan model dinamis Cairns-Blake-Dowd (CBD) untuk proyeksi mortalitas jangka panjang?
 \end{enumerate}
 
 \section{Tujuan Penelitian}
 
-Berdasarkan rumusan masalah yang telah dipaparkan, penelitian ini memiliki tujuan-tujuan sebagai berikut:
+Tujuan penelitian adalah:
 
 \begin{enumerate}
-    \item Mengonstruksi model STLT dan DSTLT secara matematis, termasuk derivasi kendala kehalusan pada fungsi \textit{hazard} untuk model STLT dan formulasi parameter dinamis untuk model DSTLT.
-    
-    \item Melakukan estimasi parameter model STLT dan DSTLT menggunakan metode \textit{maximum likelihood estimation} (MLE) dengan mempertimbangkan data mortalitas tersensor interval dan kanan, serta menentukan usia ambang optimal.
-    
-    \item Mengevaluasi kinerja model STLT dengan membandingkan kesesuaian model (\textit{goodness-of-fit}) terhadap model mortalitas statis lain seperti Gompertz-Makeham, Heligman-Pollard, dan Coale-Kisker.
-    
-    \item Mengevaluasi kinerja model DSTLT dalam hal kesesuaian \textit{in-sample} dan kemampuan peramalan \textit{out-of-sample}, dengan membandingkannya terhadap model mortalitas dinamis Cairns-Blake-Dowd (CBD).
+    \item Mengonstruksi model STLT dan DSTLT secara matematis, termasuk derivasi \textit{smoothing constraint} $\theta = 1/(BC^u)$ dan formulasi parameter dinamis $B_i = \exp(a + bi)$ untuk DSTLT.
+
+    \item Mengestimasi parameter STLT dan DSTLT menggunakan MLE dengan data tersensor, dan menentukan usia ambang optimal $u$ melalui \textit{profile likelihood} dari kandidat $u \in \{85, 86, \ldots, 110\}$.
+
+    \item Mengevaluasi kinerja in-sample STLT dibandingkan model statis (Gompertz-Makeham, Heligman-Pollard, Coale-Kisker) menggunakan kriteria AIC, BIC, dan SSE.
+
+    \item Mengevaluasi kinerja in-sample dan out-of-sample DSTLT dibandingkan model dinamis CBD untuk proyeksi mortalitas kohor mendatang.
 \end{enumerate}
 
 \section{Batasan Penelitian}
