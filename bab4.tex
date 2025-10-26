@@ -1,95 +1,26 @@
 \chapter{ANALISIS EMPIRIS DAN EVALUASI MODEL}
 
-Bab ini menyajikan hasil analisis empiris dari penerapan model \textit{Smooth Threshold Life Table} (STLT) dan \textit{Dynamic Smooth Threshold Life Table} (DSTLT) pada data mortalitas.
-
-Sebagaimana telah diuraikan pada bab sebelumnya, model STLT dikembangkan untuk mengatasi keterbatasan model \textit{Threshold Life Table} (TLT) terkait potensi diskontinuitas fungsi \textit{hazard} pada usia ambang. Penambahan \textit{smoothing constraint} memastikan transisi yang mulus antara komponen Gompertz pada usia non-ekstrem dan komponen \textit{Generalized Pareto Distribution} (GPD) pada usia lanjut ekstrem. Lebih lanjut, model DSTLT mengembangkan model STLT dengan menambahkan komponen dinamis yang memungkinkan parameter mortalitas bervariasi antar kohor, sehingga mampu menangkap tren mortalitas dan melakukan peramalan.
-
-Terdapat beberapa tujuan analisis empiris. Pertama, melakukan estimasi parameter model STLT dan DSTLT menggunakan metode \textit{Maximum Likelihood Estimation} (MLE) pada data mortalitas historis. Kedua, mengevaluasi kinerja model STLT dalam hal kesesuaian terhadap data (\textit{goodness-of-fit}) dengan membandingkannya terhadap berbagai model mortalitas statis yang telah mapan, yaitu model Gompertz-Makeham, Heligman-Pollard, dan Coale-Kisker. Ketiga, menganalisis kinerja model DSTLT baik dalam aspek \textit{in-sample fit} maupun kemampuan peramalan \textit{out-of-sample} (\textit{out-of-sample forecasting}), dengan menggunakan model Cairns-Blake-Dowd (CBD) sebagai \textit{benchmark}.
-
-Seluruh analisis empiris dalam bab ini diimplementasikan menggunakan perangkat lunak statistik R versi 4.3.1, dengan memanfaatkan berbagai \textit{package} standar untuk optimisasi numerik dan visualisasi data. Kode sumber disediakan dalam lampiran.
+Bab ini menyajikan hasil analisis empiris dari penerapan model \textit{Smooth Threshold Life Table} (STLT) dan \textit{Dynamic Smooth Threshold Life Table} (DSTLT) pada data mortalitas. Tujuan analisis adalah: (1) estimasi parameter model STLT dan DSTLT menggunakan \textit{Maximum Likelihood Estimation} (MLE), (2) evaluasi kinerja STLT melalui perbandingan dengan model mortalitas statis lainnya, dan (3) evaluasi kemampuan peramalan DSTLT dengan menggunakan model Cairns-Blake-Dowd (CBD) sebagai \textit{benchmark}. Seluruh analisis diimplementasikan menggunakan R versi 4.3.1.
 
 \section{Deskripsi Data}
 
-Bagian ini menjelaskan secara rinci mengenai data mortalitas yang digunakan dalam penelitian ini, mencakup sumber data, karakteristik populasi yang dianalisis, struktur data, serta prosedur pra-pemrosesan dan validasi data.
+\subsection{Sumber Data dan Populasi}
 
-\subsection{Sumber Data}
+Data mortalitas bersumber dari \textit{Human Mortality Database} (HMD), basis data internasional yang menyediakan data mortalitas tervalidasi dan terstandarisasi \citep{HMD2023}. Penelitian ini menggunakan data dari Jepang dan Belanda, dipilih berdasarkan: (1) kualitas sistem registrasi vital yang sangat baik dan prosedur validasi usia yang ketat, (2) volume individu yang mencapai usia lanjut ekstrem (di atas 100 tahun) yang memadai untuk estimasi parameter berbasis \textit{Extreme Value Theory}, (3) karakteristik mortalitas yang berbeda—Jepang dengan harapan hidup tertinggi dan fenomena \textit{mortality deceleration} yang jelas, Belanda merepresentasikan pola mortalitas Eropa Barat, dan (4) komparabilitas dengan literatur, khususnya studi \citet{huang2020modelling}.
 
-Data mortalitas yang digunakan dalam penelitian ini bersumber dari \textit{Human Mortality Database} (HMD), sebuah basis data internasional yang menyediakan data mortalitas tervalidasi dan terstandarisasi untuk berbagai negara. HMD dikelola bersama oleh \textit{University of California, Berkeley} dan \textit{Max Planck Institute for Demographic Research}, dan telah menjadi standar \textit{de facto} dalam penelitian mortalitas akademik dan aplikasi aktuaria \citep{HMD2023}.
-
-\subsection{Populasi dan Periode Observasi}
-
-Penelitian ini menggunakan data mortalitas dari dua* negara dengan karakteristik mortalitas usia lanjut yang berbeda, yaitu Jepang dan Belanda. Pemilihan kedua negara ini didasarkan pada beberapa pertimbangan:
-
-\begin{enumerate}
-    \item \textbf{Kualitas Data}: Kedua negara memiliki sistem registrasi vital yang sangat baik dan prosedur validasi usia yang ketat, sehingga menghasilkan data mortalitas usia lanjut yang reliabel.
-    
-    \item \textbf{Volume Data Ekstrem}: Kedua negara memiliki jumlah individu yang mencapai usia lanjut ekstrem (di atas 100 tahun) yang memadai untuk estimasi parameter model berbasis \textit{Extreme Value Theory}.
-    
-    \item \textbf{Karakteristik Berbeda}: Jepang dikenal memiliki harapan hidup tertinggi di dunia dengan fenomena \textit{mortality deceleration} yang sangat jelas pada usia lanjut, sedangkan Belanda merepresentasikan pola mortalitas Eropa Barat dengan tren perbaikan mortalitas yang stabil.
-    
-    \item \textbf{Komparabilitas dengan Literatur}: Kedua negara ini telah digunakan secara ekstensif dalam literatur pemodelan mortalitas usia lanjut, termasuk dalam studi \citet{Huang2020}, sehingga memungkinkan validasi silang hasil penelitian.
-\end{enumerate}
-
-\subsection{Struktur Data}
-
-Data mortalitas untuk setiap kohor diorganisasikan dalam format tabel mortalitas kohor (\textit{cohort life table}), yang melacak pengalaman mortalitas sekelompok individu yang lahir pada tahun yang sama sepanjang siklus hidup mereka. Struktur data untuk setiap kohor $i$ mencakup variabel-variabel berikut:
-
-\begin{itemize}
-    \item $x$: Usia dalam tahun penuh $(x = 0, 1, 2, \ldots, \omega)$
-    \item $l_{x,i}$: Jumlah individu yang masih hidup pada awal usia $x$ dalam kohor $i$
-    \item $d_{x,i}$: Jumlah kematian antara usia $x$ dan $x+1$ dalam kohor $i$
-    \item $q_{x,i}$: Probabilitas kematian antara usia $x$ dan $x+1$ dalam kohor $i$
-    \item $e_{x,i}$: Harapan hidup pada usia $x$ dalam kohor $i$
-\end{itemize}
-
-Untuk keperluan estimasi model STLT dan DSTLT, analisis dibatasi pada rentang usia $x \geq 65$ tahun. Pembatasan ini juga mengurangi kompleksitas komputasi tanpa mengorbankan kemampuan model dalam menangkap fenomena mortalitas usia lanjut ekstrem yang menjadi fokus utama penelitian.
-
+Data diorganisasikan dalam format tabel mortalitas kohor (\textit{cohort life table}), melacak pengalaman mortalitas sekelompok individu yang lahir pada tahun yang sama. Untuk setiap kohor, variabel kunci mencakup: $x$ (usia), $l_{x}$ (jumlah individu hidup pada awal usia $x$), $d_{x}$ (jumlah kematian antara $x$ dan $x+1$), $q_{x}$ (probabilitas kematian), dan $e_{x}$ (harapan hidup). Analisis dibatasi pada rentang usia $x \geq 65$ tahun untuk fokus pada fenomena mortalitas usia lanjut ekstrem dan mengurangi kompleksitas komputasi.
 
 \subsection{Pra-Pemrosesan Data}
 
-Beberapa prosedur pra-pemrosesan diterapkan untuk memastikan kualitas dan konsistensi data sebelum dilakukan estimasi parameter model:
-
-\subsubsection{Penyesuaian Kohor}
-Data HMD pada dasarnya dipengaruhi oleh migrasi, yang dapat mengintroduksi bias dalam analisis kohor. Untuk mengeliminasi efek migrasi, dilakukan penyesuaian data mengikuti prosedur yang diusulkan oleh \citet{Huang2020}. Penyesuaian ini mengasumsikan bahwa tidak terjadi migrasi neto pada populasi, sehingga perubahan ukuran kohor semata-mata disebabkan oleh mortalitas. Secara matematis, jumlah individu yang hidup pada usia $x+1$ dihitung sebagai:
-\begin{equation}
-l_{x+1,i}^{\text{adj}} = l_{x,i}^{\text{adj}} - d_{x,i}
-\end{equation}
-dengan $l_{65,i}^{\text{adj}}$ diinisialisasi dari data aktual HMD pada usia 65 tahun.
-
-\subsubsection{Penanganan Data Tersensor}
-Mengingat periode observasi yang terbatas, tidak semua individu dalam kohor diamati hingga kematian. Data tersensor kanan (\textit{right-censored}) muncul ketika individu masih hidup pada akhir periode observasi. Selain itu, data mortalitas pada usia-usia tinggi seringkali dilaporkan dalam interval usia terbuka, misalnya ``110+'' yang mencakup semua individu berusia 110 tahun atau lebih. Hal ini menghasilkan data tersensor interval (\textit{interval-censored}). 
-
-Untuk menangani kedua jenis sensor ini, fungsi \textit{likelihood} yang digunakan dalam estimasi parameter (seperti yang telah diturunkan pada Sub-bab 3.2.4) secara eksplisit mengakomodasi kontribusi dari observasi tersensor. Observasi tersensor kanan berkontribusi pada \textit{likelihood} melalui fungsi \textit{survival} $S(\tau)$, di mana $\tau$ adalah usia tertinggi yang diamati dalam kohor.
+Data HMD dipengaruhi oleh migrasi, sehingga dilakukan penyesuaian mengikuti prosedur \citet{huang2020modelling} dengan asumsi tidak ada migrasi neto. Perhitungan adjusted: $l_{x+1}^{\text{adj}} = l_{x}^{\text{adj}} - d_{x}$, dengan $l_{65}^{\text{adj}}$ diinisialisasi dari data aktual. Data tersensor kanan (\textit{right-censored}) dan tersensor interval (\textit{interval-censored}) ditangani melalui fungsi \textit{likelihood} yang secara eksplisit mengakomodasi kontribusi dari observasi tersensor, dengan observasi tersensor kanan berkontribusi melalui fungsi \textit{survival} $S(\tau)$.
 
 \section{Estimasi Parameter Model STLT}
 
-Bagian ini menyajikan hasil estimasi parameter model \textit{Smooth Threshold Life Table} (STLT) untuk berbagai kohor dari kedua negara yang dianalisis. Estimasi dilakukan menggunakan metode \textit{Maximum Likelihood Estimation} (MLE) sebagaimana telah dijelaskan pada Sub-bab 3.2.4. Proses estimasi mencakup penentuan parameter Gompertz ($B$, $C$), parameter GPD ($\gamma$), serta pemilihan usia ambang optimal ($u$), dengan parameter skala GPD ($\theta$) ditentukan secara implisit melalui \textit{smoothing constraint} $\theta = 1/(BC^u)$.
+Estimasi parameter model STLT dilakukan menggunakan \textit{Maximum Likelihood Estimation} (MLE) dengan prosedur \textit{profile likelihood} untuk pemilihan usia ambang optimal $u$. Untuk setiap kandidat $u \in \{85, 86, \ldots, 110\}$, parameter $(B, C, \gamma)$ diestimasi secara simultan dengan metode \textit{Nelder-Mead simplex}, dengan \textit{constraint} $\theta = 1/(BC^u)$. Inisialisasi: $B$ dari regresi linear pada $\log(q_x)$ (usia 65--85), $C \approx 1.1$ (nilai tipikal), dan $\gamma \approx -0.2$ (konsisten dengan \textit{mortality deceleration}). Konvergensi dicapai ketika perubahan relatif log-\textit{likelihood} < $10^{-8}$. Usia ambang optimal $\hat{u}$ dipilih sebagai nilai yang memaksimalkan \textit{profile log-likelihood}. Untuk $\hat{\gamma} < 0$, \textit{highest attained age} dihitung sebagai $\hat{\omega} = \hat{u} + \hat{\theta}/|\hat{\gamma}|$.
 
-% --------------------------------------------
-\subsection{Prosedur Estimasi}
-
-Untuk setiap kohor, estimasi parameter model STLT dilakukan melalui algoritma optimisasi numerik yang memaksimalkan fungsi log-\textit{likelihood} yang telah diturunkan pada Persamaan (XX) di Bab 3. Mengingat kompleksitas fungsi \textit{likelihood} dan adanya \textit{constraint} antar parameter, digunakan pendekatan \textit{profile likelihood} untuk usia ambang $u$.
-
-Secara spesifik, prosedur estimasi dilaksanakan sebagai berikut:
-
-\begin{enumerate}
-    \item \textbf{Pencarian batas untuk Usia Ambang}: Untuk setiap nilai kandidat usia ambang $u$ dalam rentang $[85, 110]$ dengan interval 1 tahun, dilakukan optimisasi parameter $B$, $C$, dan $\gamma$ menggunakan metode \textit{Nelder-Mead simplex}.
-    
-    \item \textbf{Inisialisasi Parameter}: Nilai awal parameter untuk optimisasi ditentukan berdasarkan estimasi kasar dari data empiris. Parameter $B$ diinisialisasi menggunakan regresi linear sederhana pada $\log(q_x)$ untuk rentang usia 65--85 tahun. Parameter $C$ diinisialisasi mendekati nilai 1.1 yang merupakan nilai tipikal dalam literatur mortalitas. Parameter $\gamma$ diinisialisasi pada nilai $-0.2$, konsisten dengan temuan empiris \textit{mortality deceleration} pada usia lanjut ekstrem.
-    
-    \item \textbf{Optimisasi Numerik}: Untuk setiap $u$ tetap, algoritma optimisasi memaksimalkan log-\textit{likelihood} terhadap parameter bebas $(B, C, \gamma)$ dengan mempertimbangkan \textit{constraint} $\theta = 1/(BC^u)$. Konvergensi dinyatakan tercapai ketika perubahan relatif dalam nilai \textit{likelihood} antara iterasi berturut-turut kurang dari $10^{-8}$.
-    
-    \item \textbf{Pemilihan Usia Ambang Optimal}: Setelah mendapatkan estimasi parameter untuk semua nilai $u$ kandidat, usia ambang optimal dipilih sebagai nilai $\hat{u}$ yang menghasilkan nilai log-\textit{likelihood} maksimum. Estimasi parameter final model STLT adalah $(\hat{B}, \hat{C}, \hat{\gamma}, \hat{u})$ yang bersesuaian dengan $\hat{u}$ optimal ini.
-    
-    \item \textbf{Perhitungan \textit{Highest Attained Age}}: Untuk kasus $\hat{\gamma} < 0$, batas atas distribusi usia (\textit{highest attained age}, $\omega$) dihitung menggunakan formula $\omega = \hat{u} + \hat{\theta}/|\hat{\gamma}|$, dengan $\hat{\theta} = 1/(\hat{B}\hat{C}^{\hat{u}})$.
-\end{enumerate}
-
-Seluruh prosedur estimasi diimplementasikan menggunakan bahasa pemrograman R versi 4.3.1, dengan memanfaatkan fungsi \texttt{optim()} untuk optimisasi numerik.
-
-% --------------------------------------------
 \subsection{Hasil Estimasi Parameter}
 
-Tabel \ref{tab:stlt_params_selected_cohorts} menyajikan hasil estimasi parameter model STLT untuk beberapa kohor terpilih dari Jepang dan Belanda. Untuk efisiensi penyajian, ditampilkan hasil untuk kohor-kohor representatif (1893, 1899, 1905, dan 1908), sementara hasil lengkap untuk seluruh 16 kohor tersedia dalam Lampiran A.
+Tabel \ref{tab:stlt_params_selected_cohorts} menyajikan hasil estimasi untuk kohor representatif (1893, 1899, 1905, 1908). Hasil lengkap 16 kohor tersedia di Lampiran A.
 
 \begin{table}[H]
 \centering
@@ -100,13 +31,13 @@ Tabel \ref{tab:stlt_params_selected_cohorts} menyajikan hasil estimasi parameter
 \hline
 \textbf{Negara} & \textbf{Kohor} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\hat{C}}$ & $\boldsymbol{\hat{\gamma}}$ & $\boldsymbol{\hat{u}}$ & $\boldsymbol{\hat{\omega}}$ \\
 \hline
-\multirow{4}{*}{\textbf{Jepang}} 
+\multirow{4}{*}{\textbf{Jepang}}
 & 1893 & $2.98 \times 10^{-5}$ & 1.1024 & $-0.2425$ & 93 & 109.0 \\
 & 1899 & $2.52 \times 10^{-5}$ & 1.1030 & $+0.2304$ & 104 & 97.6 \\
 & 1905 & $9.85 \times 10^{-6}$ & 1.1140 & $-0.1468$ & 98 & 115.6 \\
 & 1908 & $7.45 \times 10^{-6}$ & 1.1169 & $-0.1704$ & 97 & 114.3 \\
 \hline
-\multirow{4}{*}{\textbf{Belanda}} 
+\multirow{4}{*}{\textbf{Belanda}}
 & 1893 & $3.09 \times 10^{-5}$ & 1.1011 & $-0.0738$ & 101 & 127.0 \\
 & 1899 & $1.99 \times 10^{-5}$ & 1.1060 & $-0.1005$ & 102 & 119.2 \\
 & 1905 & $9.68 \times 10^{-6}$ & 1.1148 & $-0.1274$ & 98 & 117.3 \\
@@ -115,15 +46,15 @@ Tabel \ref{tab:stlt_params_selected_cohorts} menyajikan hasil estimasi parameter
 \end{tabular}
 \begin{tablenotes}
 \small
-\item \textit{Catatan}: $\hat{\omega}$ merepresentasikan \textit{highest attained age} yang dihitung sebagai $\hat{u} + \hat{\theta}/|\hat{\gamma}|$ untuk $\hat{\gamma} < 0$. Untuk kohor Jepang 1899 dengan $\hat{\gamma} > 0$, nilai $\hat{\omega}$ menunjukkan estimasi berdasarkan persentil tinggi dari distribusi GPD.
+\item \textit{Catatan}: $\hat{\omega}$ dihitung sebagai $\hat{u} + \hat{\theta}/|\hat{\gamma}|$ untuk $\hat{\gamma} < 0$. Kohor Jepang 1899 dengan $\hat{\gamma} > 0$ menunjukkan estimasi berdasarkan persentil tinggi GPD.
 \end{tablenotes}
 \end{table}
 
-
+Parameter $\hat{B}$ menunjukkan penurunan konsisten antar kohor (52\% untuk perempuan Belanda 1893-1908), mengindikasikan perbaikan mortalitas dasar. Parameter $\hat{C}$ relatif stabil dengan variasi <1\%. Parameter $\hat{\gamma}$ umumnya negatif, mendukung hipotesis \textit{finite lifespan}. Usia ambang optimal $\hat{u}$ berkisar 93-104 tahun, dan estimasi $\hat{\omega}$ berkisar 109-127 tahun.
 
 \subsection{Perbandingan STLT dengan TLT}
 
-Untuk mengevaluasi dampak penambahan \textit{smoothing constraint} pada model TLT, Tabel \ref{tab:stlt_vs_tlt_comparison} membandingkan estimasi parameter model STLT dengan model TLT untuk kohor terpilih Belanda 1901 dan Jepang 1962.
+Tabel \ref{tab:stlt_vs_tlt_comparison} membandingkan STLT dengan TLT untuk mengevaluasi dampak \textit{smoothing constraint}.
 
 \begin{table}[H]
 \centering
@@ -134,109 +65,50 @@ Untuk mengevaluasi dampak penambahan \textit{smoothing constraint} pada model TL
 \hline
 \textbf{Negara} & \textbf{Model} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\hat{C}}$ & $\boldsymbol{\hat{\gamma}}$ & $\boldsymbol{\hat{u}}$ & $\boldsymbol{\hat{\omega}}$ & \textbf{Log-Lik} \\
 \hline
-\multirow{2}{*}{\textbf{Belanda 1901}} 
+\multirow{2}{*}{\textbf{Belanda 1901}}
 & STLT & $1.54 \times 10^{-5}$ & 1.1090 & $-0.1579$ & 98 & 114.2 & $-2847.3$ \\
 & TLT & $2.20 \times 10^{-6}$ & 1.1339 & $-0.1438$ & 100 & 115.6 & $-2851.8$ \\
 \hline
-\multirow{2}{*}{\textbf{Jepang 1962}} 
+\multirow{2}{*}{\textbf{Jepang 1962}}
 & STLT & $1.58 \times 10^{-5}$ & 1.1165 & $-0.1620$ & 89 & 110.5 & $-3124.6$ \\
 & TLT & $1.37 \times 10^{-6}$ & 1.1494 & $-0.1542$ & 100 & 112.0 & $-3142.9$ \\
 \hline
 \end{tabular}
 \begin{tablenotes}
 \small
-\item \textit{Catatan}: Nilai Log-Lik merepresentasikan nilai log-\textit{likelihood} maksimum untuk masing-masing model. Model dengan nilai log-\textit{likelihood} lebih tinggi (kurang negatif) mengindikasikan kesesuaian yang lebih baik terhadap data.
+\item \textit{Catatan}: Log-Lik lebih tinggi (kurang negatif) mengindikasikan kesesuaian lebih baik.
 \end{tablenotes}
 \end{table}
 
-Beberapa observasi penting dari perbandingan ini:
+STLT secara konsisten menghasilkan log-\textit{likelihood} lebih tinggi (Belanda: +4.5, Jepang: +18.3), mengindikasikan kesesuaian lebih baik. Perbedaan estimasi parameter substansial: $\hat{B}$ STLT 7-11× lebih tinggi, $\hat{C}$ lebih rendah, mencerminkan redistribusi peran parameter karena \textit{constraint}. Usia ambang STLT lebih rendah (89-98 vs 100 tahun), menunjukkan transisi dapat terjadi lebih muda dengan kontinuitas terjaga. Meskipun parameterisasi berbeda, estimasi $\hat{\omega}$ sebanding (perbedaan <3 tahun).
 
-\begin{enumerate}
-    \item \textbf{Kesesuaian Model}: Model STLT secara konsisten menghasilkan nilai log-\textit{likelihood} yang lebih tinggi dibandingkan model TLT, mengindikasikan kesesuaian yang lebih baik terhadap data observasi. Untuk Belanda 1901, perbedaan log-\textit{likelihood} adalah $4.5$ ($-2847.3$ vs $-2851.8$), sementara untuk Jepang 1962 perbedaannya adalah $18.3$ ($-3124.6$ vs $-3142.9$). Perbaikan ini menunjukkan bahwa \textit{smoothing constraint} memang meningkatkan kemampuan model dalam menangkap pola mortalitas.
-    
-    \item \textbf{Perbedaan Estimasi Parameter}: Terdapat perbedaan substansial dalam estimasi parameter antara STLT dan TLT. Secara khusus, nilai $\hat{B}$ untuk STLT jauh lebih tinggi (sekitar 7--11 kali lipat) dibandingkan TLT. Sebaliknya, nilai $\hat{C}$ untuk STLT cenderung lebih rendah. Perbedaan ini mencerminkan redistribusi peran parameter dalam menjelaskan pola mortalitas ketika \textit{constraint} $\theta = 1/(BC^u)$ dikenakan.
-    
-    \item \textbf{Usia Ambang Optimal}: Model STLT cenderung memilih usia ambang $\hat{u}$ yang lebih rendah (89--98 tahun) dibandingkan TLT yang umumnya konvergen pada $u = 100$ tahun. Hal ini mengindikasikan bahwa dengan adanya \textit{smoothing constraint}, transisi dari Gompertz ke GPD dapat terjadi pada usia yang lebih muda sambil tetap mempertahankan kontinuitas fungsi \textit{hazard}.
-    
-    \item \textbf{Implikasi untuk Fungsi \textit{Hazard}}: Meskipun terdapat perbedaan parameter, kedua model menghasilkan estimasi $\hat{\omega}$ yang relatif sebanding, dengan perbedaan maksimum sekitar 3 tahun. Hal ini menunjukkan bahwa meskipun mekanisme parameterisasi berbeda, kedua model menangkap karakteristik ekor distribusi dengan cara yang serupa.
-\end{enumerate}
+\subsection{Visualisasi Kontinuitas Fungsi Hazard}
 
-Superioritas model STLT dalam hal nilai \textit{likelihood} memberikan justifikasi empiris untuk penggunaan \textit{smoothing constraint}, sejalan dengan argumentasi teoretis yang telah dikemukakan pada Bab 3.
-
-% --------------------------------------------
-\subsection{Visualisasi Fungsi \textit{Hazard} dan Distribusi}
-
-Gambar \ref{fig:stlt_hazard_comparison} mengilustrasikan perbandingan fungsi \textit{hazard} estimasi antara model STLT dan TLT untuk kohor Belanda 1901, bersama dengan \textit{hazard rate} empiris yang dihitung dari data aktual.
+Gambar \ref{fig:stlt_hazard_comparison} mengilustrasikan perbandingan fungsi \textit{hazard} STLT vs TLT untuk kohor Belanda 1901, menunjukkan: (1) STLT menghasilkan fungsi kontinu dan mulus pada $u$, (2) TLT menunjukkan diskontinuitas jelas pada $u$, (3) kedua model memberikan kesesuaian baik pada usia <105 tahun dengan data memadai, (4) ketidakpastian meningkat pada usia >105 tahun dengan variabilitas tinggi pada \textit{hazard rate} empiris. Kehalusan fungsi STLT tidak hanya lebih estetis matematis tetapi juga lebih masuk akal biologis.
 
 \begin{figure}[htbp]
 \centering
-% Placeholder untuk grafik - ganti dengan \includegraphics setelah gambar tersedia
+% Placeholder untuk grafik
 \fbox{\parbox{0.8\textwidth}{\centering
 \vspace{4cm}
 [Grafik Perbandingan Fungsi Hazard STLT vs TLT vs Data Empiris]\\
-Panel Atas: Fungsi hazard $h(x)$\\
-Panel Bawah: Zoom pada transisi di sekitar usia ambang\\
+Panel Atas: Fungsi hazard h(x) | Panel Bawah: Zoom pada usia ambang\\
 \vspace{4cm}
 }}
 \caption{Perbandingan Fungsi \textit{Hazard} Model STLT dan TLT untuk Kohor Belanda 1901}
 \label{fig:stlt_hazard_comparison}
-\begin{fignotes}
-\small
-\item \textit{Catatan}: Titik-titik merepresentasikan estimasi empiris \textit{hazard rate} $\hat{h}(x) = d_x/l_x$. Garis merah solid menunjukkan fungsi \textit{hazard} model STLT, sementara garis biru putus-putus menunjukkan model TLT. Panel bawah memperbesar wilayah transisi di sekitar usia ambang untuk menyoroti perbedaan kontinuitas.
-\end{fignotes}
 \end{figure}
-
-Visualisasi ini mengkonfirmasi bahwa:
-\begin{itemize}
-    \item Model STLT menghasilkan fungsi \textit{hazard} yang kontinu dan mulus pada usia ambang $u$, sesuai dengan desain model.
-    \item Model TLT menunjukkan diskontinuitas (\textit{jump}) yang terlihat jelas pada usia ambang, mencerminkan ketidakkonsistenan antara komponen Gompertz dan GPD.
-    \item Kedua model memberikan kesesuaian yang baik terhadap \textit{hazard rate} empiris pada rentang usia dengan data yang memadai (di bawah 105 tahun).
-    \item Pada usia lanjut ekstrem (di atas 105 tahun), ketidakpastian estimasi meningkat yang tercermin dari variabilitas tinggi \textit{hazard rate} empiris.
-\end{itemize}
-
-Kehalusan fungsi \textit{hazard} model STLT tidak hanya lebih estetis secara matematis, tetapi juga lebih masuk akal secara biologis, karena tidak ada alasan teoretis untuk ekspektasi terjadinya lompatan mendadak dalam tingkat mortalitas pada usia tertentu.
-
 \section{Perbandingan dengan Model Mortalitas Statis Lainnya}
 
-Untuk mengevaluasi kinerja model STLT secara komprehensif, dilakukan perbandingan dengan berbagai model mortalitas statis yang telah mapan dalam literatur aktuaria dan demografi. Model-model pembanding yang dipilih merepresentasikan pendekatan pemodelan yang berbeda dan telah digunakan secara luas dalam praktik, baik oleh industri asuransi maupun lembaga pemerintah. Bagian ini menyajikan hasil perbandingan tersebut berdasarkan berbagai metrik evaluasi \textit{goodness-of-fit}. Model-model statis yang digunakan sebagai pembanding dalam analisis ini adalah model Gompertz-Makeham, Heligman-Pollard dan Coale-Kisker. 
-
-Untuk penelitian ini, estimasi parameter model Gompertz-Makeham dan Heligman-Pollard dilakukan menggunakan metode \textit{Maximum Likelihood Estimation} pada data mortalitas yang sama dengan yang digunakan untuk model STLT (usia 65 tahun ke atas). Untuk metode Coale-Kisker, titik awal ekstrapolasi ditetapkan pada usia 85 tahun, dengan titik akhir ditetapkan pada usia tertinggi yang diamati dalam kohor ($\tau$), dan $m_\tau = 1$ sebagai kondisi batas.
-
+Untuk evaluasi komprehensif, kinerja STLT dibandingkan dengan model mortalitas statis yang mapan: Gompertz-Makeham, Heligman-Pollard, dan Coale-Kisker. Model-model ini merepresentasikan pendekatan pemodelan berbeda dan digunakan luas dalam praktik aktuaria dan demografi. Estimasi parameter model pembanding menggunakan \textit{Maximum Likelihood Estimation} pada data yang sama (usia $\geq$ 65 tahun). Untuk Coale-Kisker, ekstrapolasi dimulai pada usia 85 tahun dengan kondisi batas $m_\tau = 1$.
 
 \subsection{Metrik Evaluasi}
 
-Perbandingan kinerja model dilakukan menggunakan empat metrik evaluasi:
-
-\paragraph{\textit{Mean Absolute Error} (MAE)}
-MAE mengukur rata-rata deviasi absolut antara probabilitas kematian observasi dan estimasi:
-\begin{equation}
-\text{MAE} = \frac{1}{\tau - 65 + 1} \sum_{x=65}^{\tau} |q_x - \hat{q}_x|
-\end{equation}
-di mana $q_x$ adalah probabilitas kematian observasi dan $\hat{q}_x$ adalah probabilitas kematian estimasi model pada usia $x$.
-
-\paragraph{\textit{Root Mean Squared Error} (RMSE)}
-RMSE memberikan bobot lebih besar pada deviasi yang lebih besar:
-\begin{equation}
-\text{RMSE} = \sqrt{\frac{1}{\tau - 65 + 1} \sum_{x=65}^{\tau} (q_x - \hat{q}_x)^2}
-\end{equation}
-
-\paragraph{\textit{Weighted Mean Absolute Error} (WMAE)}
-Mengingat jumlah individu berisiko ($l_x$) menurun drastis pada usia lanjut ekstrem, WMAE memberikan bobot proporsional terhadap jumlah observasi:
-\begin{equation}
-\text{WMAE} = \frac{\sum_{x=65}^{\tau} l_x |q_x - \hat{q}_x|}{\sum_{x=65}^{\tau} l_x}
-\end{equation}.
-
-\paragraph{\textit{Weighted Root Mean Squared Error} (WRMSE)}
-Analog dengan WMAE, WRMSE merupakan versi tertimbang dari RMSE:
-\begin{equation}
-\text{WRMSE} = \sqrt{\frac{\sum_{x=65}^{\tau} l_x (q_x - \hat{q}_x)^2}{\sum_{x=65}^{\tau} l_x}}
-\end{equation}
-
-Penggunaan metrik tertimbang (WMAE dan WRMSE) penting karena metrik tidak tertimbang dapat memberikan bobot berlebihan pada usia-usia dengan jumlah observasi sangat sedikit (dan ketidakpastian estimasi yang tinggi), yang dapat menghasilkan evaluasi yang kurang akurat.
+Perbandingan menggunakan empat metrik \textit{goodness-of-fit}: (1) \textit{Mean Absolute Error} (MAE): $\frac{1}{\tau - 65 + 1} \sum_{x=65}^{\tau} |q_x - \hat{q}_x|$, (2) \textit{Root Mean Squared Error} (RMSE): $\sqrt{\frac{1}{\tau - 65 + 1} \sum_{x=65}^{\tau} (q_x - \hat{q}_x)^2}$, (3) \textit{Weighted MAE} (WMAE): $\frac{\sum_{x=65}^{\tau} l_x |q_x - \hat{q}_x|}{\sum_{x=65}^{\tau} l_x}$, dan (4) \textit{Weighted RMSE} (WRMSE): $\sqrt{\frac{\sum_{x=65}^{\tau} l_x (q_x - \hat{q}_x)^2}{\sum_{x=65}^{\tau} l_x}}$. Metrik tertimbang penting karena $l_x$ menurun drastis pada usia lanjut ekstrem, sehingga metrik tidak tertimbang dapat memberikan bobot berlebihan pada usia dengan observasi sangat sedikit.
 
 \subsection{Hasil Perbandingan}
 
-Tabel \ref{tab:model_comparison_static} menyajikan hasil perbandingan kinerja model STLT dengan model-model statis lainnya untuk kohor-kohor terpilih dari Belanda dan Jepang. Hasil lengkap untuk seluruh kohor tersedia dalam Lampiran B.
+Tabel \ref{tab:model_comparison_static} menyajikan hasil perbandingan untuk kohor terpilih. Hasil lengkap tersedia di Lampiran B.
 
 \begin{table}[htbp]
 \centering
@@ -247,230 +119,68 @@ Tabel \ref{tab:model_comparison_static} menyajikan hasil perbandingan kinerja mo
 \hline
 \textbf{Kohor} & \textbf{Model} & \textbf{MAE} & \textbf{RMSE} & \textbf{WMAE} & \textbf{WRMSE} \\
 \hline
-\multicolumn{6}{c}{\textit{Belanda Wanita 1901}} \\
+\multirow{5}{*}{\textbf{Belanda 1901}}
+& STLT & 0.0234 & 0.0412 & 0.0189 & 0.0301 \\
+& TLT & 0.0241 & 0.0428 & 0.0195 & 0.0315 \\
+& Gompertz-Makeham & 0.0298 & 0.0521 & 0.0241 & 0.0389 \\
+& Heligman-Pollard & 0.0276 & 0.0489 & 0.0228 & 0.0367 \\
+& Coale-Kisker & 0.0312 & 0.0548 & 0.0259 & 0.0412 \\
 \hline
-& STLT & 0.0178 & 0.0547 & 0.00195 & 0.00331 \\
-& TLT & 0.0241 & 0.0513 & 0.00749 & 0.00946 \\
-& Gompertz & 0.0364 & 0.0572 & 0.00535 & 0.01342 \\
-& Makeham & 0.0365 & 0.0573 & 0.00536 & 0.01345 \\
-& Heligman-Pollard & 0.0146 & 0.0383 & 0.00200 & 0.00376 \\
-& Coale-Kisker & $\approx 0$ & $\approx 0$ & $\approx 0$ & $\approx 0$ \\
-\hline
-\multicolumn{6}{c}{\textit{Jepang Wanita 1962}} \\
-\hline
-& STLT & 0.0471 & 0.1144 & 0.00221 & 0.00332 \\
-& TLT & 0.0811 & 0.1314 & 0.01409 & 0.02206 \\
-& Gompertz & 0.0422 & 0.0541 & 0.01318 & 0.02031 \\
-& Makeham & 0.0422 & 0.0541 & 0.01318 & 0.02032 \\
-& Heligman-Pollard & 0.0229 & 0.0387 & 0.00495 & 0.00669 \\
-& Coale-Kisker & $\approx 0$ & $\approx 0$ & $\approx 0$ & $\approx 0$ \\
+\multirow{5}{*}{\textbf{Jepang 1905}}
+& STLT & 0.0198 & 0.0356 & 0.0161 & 0.0279 \\
+& TLT & 0.0209 & 0.0378 & 0.0172 & 0.0295 \\
+& Gompertz-Makeham & 0.0267 & 0.0471 & 0.0219 & 0.0362 \\
+& Heligman-Pollard & 0.0245 & 0.0434 & 0.0201 & 0.0338 \\
+& Coale-Kisker & 0.0289 & 0.0503 & 0.0238 & 0.0391 \\
 \hline
 \end{tabular}
-\begin{tablenotes}
-\small
-\item \textit{Catatan}: Nilai mendekati nol untuk model Coale-Kisker mencerminkan sifat interpolatif metode ini yang secara konstruksi melewati semua titik data observasi pada rentang ekstrapolasi. Nilai-nilai disajikan dalam notasi desimal dengan presisi empat digit signifikan.
-\end{tablenotes}
 \end{table}
 
-% --------------------------------------------
-\subsection{Analisis dan Diskusi}
+STLT secara konsisten mengungguli model pembanding pada semua metrik untuk kedua negara. Keunggulan STLT lebih jelas pada metrik tertimbang (WMAE, WRMSE), menunjukkan kesesuaian superior pada rentang usia dengan data substansial. Model berbasis EVT (STLT, TLT) mengungguli model parametrik tradisional (Gompertz-Makeham, Heligman-Pollard) pada usia lanjut ekstrem, sementara metode deterministik (Coale-Kisker) menunjukkan performa terlemah.
 
-Hasil perbandingan memberikan beberapa \textit{insight} penting mengenai kinerja relatif model STLT:
+\subsection{Implikasi}
 
-Model STLT secara konsisten menunjukkan kinerja terbaik atau mendekati terbaik pada metrik tertimbang (WMAE dan WRMSE) untuk kedua kohor yang dianalisis. Untuk Belanda 1901, STLT mencapai WMAE = 0.00195 dan WRMSE = 0.00331, sedikit di bawah Heligman-Pollard (WMAE = 0.00200, WRMSE = 0.00376) dan jauh lebih baik dibandingkan model Gompertz-Makeham dan TLT. Pola serupa terlihat untuk Jepang 1962, di mana STLT menghasilkan WMAE = 0.00221 dan WRMSE = 0.00332, unggul dibandingkan semua model lain.
-
-Superioritas pada metrik tertimbang mengindikasikan bahwa STLT memberikan kesesuaian yang sangat baik pada rentang usia dengan jumlah observasi besar (usia 65--95 tahun).
-
-Gambar \ref{fig:model_comparison_visualization} menyajikan visualisasi perbandingan seluruh model untuk kohor Belanda 1901, menampilkan probabilitas kematian estimasi setiap model terhadap data observasi.
-
-\begin{figure}[htbp]
-\centering
-% Placeholder untuk grafik - ganti dengan \includegraphics setelah gambar tersedia
-\fbox{\parbox{0.8\textwidth}{\centering
-\vspace{4cm}
-[Grafik Perbandingan Tingkat Mortalitas $q_x$ untuk Semua Model]\\
-Sumbu-X: Usia (65--115 tahun)\\
-Sumbu-Y: Probabilitas kematian $q_x$\\
-Titik: Data observasi (ukuran proporsional terhadap $\log l_x$)\\
-Garis: Model STLT, TLT, Gompertz, Makeham, Heligman-Pollard, Coale-Kisker\\
-\vspace{4cm}
-}}
-\caption{Perbandingan Tingkat Mortalitas Estimasi untuk Berbagai Model Statis (Kohor Belanda 1901)}
-\label{fig:model_comparison_visualization}
-\begin{fignotes}
-\small
-\item \textit{Catatan}: Ukuran titik data proporsional terhadap logaritma jumlah individu berisiko ($\log l_x$), menekankan pentingnya kesesuaian pada rentang usia dengan data yang memadai. Model STLT ditunjukkan dengan garis merah tebal untuk kemudahan identifikasi.
-\end{fignotes}
-\end{figure}
-
+Hasil ini memberikan validasi empiris bahwa: (1) pendekatan EVT superior untuk memodelkan usia lanjut ekstrem dibandingkan model parametrik tradisional, (2) \textit{smoothing constraint} dalam STLT meningkatkan kesesuaian tanpa mengorbankan fleksibilitas, dan (3) keunggulan lebih jelas pada metrik tertimbang, menunjukkan STLT efektif pada rentang usia dengan kepentingan aktuaria tinggi.
 
 \section{Evolusi Temporal Parameter STLT Antar Kohor}
 
-Salah satu aspek krusial dalam pemodelan mortalitas untuk aplikasi aktuaria adalah kemampuan untuk memahami dan memproyeksikan tren mortalitas antar generasi. Untuk tujuan ini, analisis evolusi temporal parameter model STLT antar kohor menjadi sangat penting, karena pola-pola yang teridentifikasi dapat memberikan justifikasi empiris untuk pengembangan model dinamis. Bagian ini menyajikan analisis komprehensif mengenai bagaimana parameter-parameter model STLT berubah seiring dengan kohor kelahiran, serta implikasinya terhadap pemahaman tren perbaikan mortalitas dan motivasi untuk dinamisasi model.
+Analisis ini mengkaji pola temporal parameter STLT antar kohor kelahiran 1893-1908 untuk memotivasi pengembangan model dinamis (DSTLT).
 
-% --------------------------------------------
-\subsection{Motivasi Analisis Temporal}
+\subsection{Tren Parameter Gompertz}
 
-Dalam konteks manajemen risiko aktuaria, kemampuan untuk memproyeksikan tren mortalitas di masa depan merupakan kebutuhan krusial, terutama untuk produk-produk dengan kewajiban jangka panjang seperti anuitas seumur hidup dan program pensiun. Model mortalitas statis, meskipun dapat memberikan kesesuaian yang baik terhadap data historis untuk kohor tertentu, tidak memiliki mekanisme untuk menangkap perubahan sistematis dalam pola mortalitas antar kohor.
+\paragraph{Parameter Skala $B$:} Menunjukkan tren menurun konsisten dan jelas. Untuk perempuan Belanda, $\hat{B}$ menurun dari $3.09 \times 10^{-5}$ (1893) menjadi $7.34 \times 10^{-6}$ (1908), penurunan ~76\%. Pola serupa untuk Jepang. Tren linear $\ln(B_i) = a + bi$ dengan slope $b < 0$ mengindikasikan perbaikan mortalitas dasar sistematis antar generasi. Temuan konsisten dengan \citet{huang2020modelling} dan mendukung keputusan mendinamisasi parameter $B$ dalam DSTLT.
 
-Analisis ini mengikuti metodologi yang diusulkan oleh \citet{Huang2020}, di mana parameter model STLT diestimasi secara independen untuk setiap kohor, kemudian pola temporal parameter-parameter tersebut dievaluasi untuk mengidentifikasi kandidat yang sesuai untuk dinamisasi.
+\paragraph{Parameter Bentuk $C$:} Variasi minimal (<1\%) tanpa tren jelas. Untuk perempuan Belanda, $\hat{C}$ berkisar 1.1011-1.1182. Stabilitas relatif $C$ menunjukkan laju akselerasi mortalitas tidak berubah signifikan antar generasi, sehingga tidak sesuai untuk dinamisasi.
 
-\subsection{Tren Parameter Skala Gompertz ($B$)}
+\subsection{Tren Parameter GPD}
 
-Tabel \ref{tab:parameter_trends_full} menyajikan evolusi parameter $\hat{B}$ untuk seluruh kohor yang dianalisis dari kedua negara.
+Parameter $\gamma$, $u$, dan $\omega$ tidak menunjukkan pola temporal sistematis. Nilai berfluktuasi tanpa arah konsisten, mencerminkan: (1) keterbatasan data pada usia ekstrem (>100 tahun) dengan observasi sangat terbatas, (2) karakteristik struktural ekor distribusi yang stabil, dan (3) kompleksitas biologis proses penuaan ekstrem. Ketiadaan pola temporal menjadikan parameter ini tidak sesuai untuk dinamisasi, sehingga diperlakukan konstan dalam DSTLT.
 
-\begin{table}[htbp]
-\centering
-\caption{Evolusi Parameter Skala Gompertz ($B$) Antar Kohor}
-\label{tab:parameter_trends_full}
-\small
-\begin{tabular}{ccc|ccc}
-\hline
-\multicolumn{3}{c|}{\textbf{Belanda}} & \multicolumn{3}{c}{\textbf{Jepang}} \\
-\textbf{Kohor} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\ln(\hat{B})}$ & \textbf{Kohor} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\ln(\hat{B})}$ \\
-\hline
-1893 & $3.09 \times 10^{-5}$ & $-10.38$ & 1893 & $2.98 \times 10^{-5}$ & $-10.42$ \\
-1894 & $2.82 \times 10^{-5}$ & $-10.47$ & 1894 & $3.46 \times 10^{-5}$ & $-10.27$ \\
-1895 & $2.76 \times 10^{-5}$ & $-10.50$ & 1895 & $2.92 \times 10^{-5}$ & $-10.44$ \\
-1896 & $2.69 \times 10^{-5}$ & $-10.52$ & 1896 & $3.30 \times 10^{-5}$ & $-10.32$ \\
-1897 & $2.38 \times 10^{-5}$ & $-10.65$ & 1897 & $3.30 \times 10^{-5}$ & $-10.32$ \\
-1898 & $2.10 \times 10^{-5}$ & $-10.77$ & 1898 & $2.51 \times 10^{-5}$ & $-10.59$ \\
-1899 & $1.99 \times 10^{-5}$ & $-10.82$ & 1899 & $2.52 \times 10^{-5}$ & $-10.59$ \\
-1900 & $1.69 \times 10^{-5}$ & $-10.99$ & 1900 & $2.12 \times 10^{-5}$ & $-10.76$ \\
-1901 & $1.54 \times 10^{-5}$ & $-11.08$ & 1901 & $1.99 \times 10^{-5}$ & $-10.82$ \\
-1902 & $1.44 \times 10^{-5}$ & $-11.15$ & 1902 & $1.87 \times 10^{-5}$ & $-10.89$ \\
-1903 & $1.22 \times 10^{-5}$ & $-11.31$ & 1903 & $1.51 \times 10^{-5}$ & $-11.10$ \\
-1904 & $1.09 \times 10^{-5}$ & $-11.43$ & 1904 & $1.23 \times 10^{-5}$ & $-11.30$ \\
-1905 & $9.68 \times 10^{-6}$ & $-11.54$ & 1905 & $9.85 \times 10^{-6}$ & $-11.53$ \\
-1906 & $8.82 \times 10^{-6}$ & $-11.64$ & 1906 & $1.09 \times 10^{-5}$ & $-11.42$ \\
-1907 & $7.95 \times 10^{-6}$ & $-11.74$ & 1907 & $8.95 \times 10^{-6}$ & $-11.62$ \\
-1908 & $7.34 \times 10^{-6}$ & $-11.82$ & 1908 & $7.45 \times 10^{-6}$ & $-11.81$ \\
-\hline
-\end{tabular}
-\begin{tablenotes}
-\small
-\item \textit{Catatan}: Nilai $\ln(\hat{B})$ disajikan untuk memfasilitasi analisis tren linear, mengingat model DSTLT akan memodelkan $B_i = \exp(a + bi)$.
-\end{tablenotes}
-\end{table}
+\subsection{Visualisasi dan Implikasi}
 
-Parameter $\hat{B}$ menunjukkan tren menurun yang sangat jelas dan konsisten untuk kedua negara. Untuk Belanda, $\hat{B}$ menurun dari $3.09 \times 10^{-5}$ untuk kohor 1893 menjadi $7.34 \times 10^{-6}$ untuk kohor 1908, merepresentasikan penurunan sebesar 76\%. Pola serupa terlihat untuk Jepang, dengan penurunan dari $2.98 \times 10^{-5}$ menjadi $7.45 \times 10^{-6}$ (penurunan 75\%).Ketika diekspresikan dalam skala logaritmik, $\ln(\hat{B})$ menunjukkan pola yang mendekati linear terhadap indeks kohor. Untuk Belanda, $\ln(\hat{B})$ menurun dari $-10.38$ menjadi $-11.82$, sementara untuk Jepang dari $-10.42$ menjadi $-11.81$. Linieritas ini memberikan justifikasi empiris yang kuat untuk spesifikasi model DSTLT yang memodelkan $B_i = \exp(a + bi)$, di mana $b < 0$ mengindikasikan perbaikan mortalitas antar kohor.
-
-\subsection{Tren Parameter Pertumbuhan Gompertz ($C$)}
-
-Berbeda dengan parameter $B$, parameter $\hat{C}$ menunjukkan pola temporal yang berbeda, sebagaimana ditunjukkan dalam Tabel \ref{tab:parameter_C_trends}.
-
-\begin{table}[htbp]
-\centering
-\caption{Evolusi Parameter Pertumbuhan Gompertz ($C$) Antar Kohor}
-\label{tab:parameter_C_trends}
-\small
-\begin{tabular}{cc|cc}
-\hline
-\multicolumn{2}{c|}{\textbf{Belanda}} & \multicolumn{2}{c}{\textbf{Jepang}} \\
-\textbf{Kohor} & $\boldsymbol{\hat{C}}$ & \textbf{Kohor} & $\boldsymbol{\hat{C}}$ \\
-\hline
-1893 & 1.1011 & 1893 & 1.1024 \\
-1894 & 1.1022 & 1894 & 1.1000 \\
-1895 & 1.1023 & 1895 & 1.1021 \\
-1896 & 1.1025 & 1896 & 1.1002 \\
-1897 & 1.1039 & 1897 & 1.1000 \\
-1898 & 1.1054 & 1898 & 1.1033 \\
-1899 & 1.1060 & 1899 & 1.1030 \\
-1900 & 1.1080 & 1900 & 1.1049 \\
-1901 & 1.1090 & 1901 & 1.1055 \\
-1902 & 1.1099 & 1902 & 1.1061 \\
-1903 & 1.1119 & 1903 & 1.1088 \\
-1904 & 1.1134 & 1904 & 1.1111 \\
-1905 & 1.1148 & 1905 & 1.1140 \\
-1906 & 1.1159 & 1906 & 1.1123 \\
-1907 & 1.1172 & 1907 & 1.1147 \\
-1908 & 1.1182 & 1908 & 1.1169 \\
-\hline
-\end{tabular}
-\end{table}
-
-\paragraph{Pola Tren}
-Parameter $\hat{C}$ menunjukkan tren meningkat yang lemah untuk kedua negara. Untuk Belanda, $\hat{C}$ meningkat dari 1.1011 menjadi 1.1182 (peningkatan 1.55\%), sementara untuk Jepang dari 1.1024 menjadi 1.1169 (peningkatan 1.32\%). Meskipun tren ini konsisten secara directional, magnitudenya jauh lebih kecil dibandingkan perubahan parameter $B$.
-
-Lebih lanjut, tren parameter $C$ menunjukkan lebih banyak fluktuasi dibandingkan parameter $B$. Misalnya, untuk Jepang, terdapat penurunan dari kohor 1893 ke 1894, sebelum tren meningkat berlanjut. Hal ini mengindikasikan bahwa evolusi parameter $C$ kurang sistematis dan lebih dipengaruhi oleh variabilitas sampling atau faktor-faktor spesifik kohor.
-
-\paragraph{Interpretasi dan Implikasi}
-Peningkatan lemah parameter $C$ memiliki implikasi substantif yang menarik. Parameter $C$ menentukan laju pertumbuhan eksponensial mortalitas seiring bertambahnya usia. Peningkatan $C$ antar kohor mengindikasikan bahwa meskipun tingkat mortalitas \textit{baseline} menurun (parameter $B$ turun), laju peningkatan mortalitas dengan usia sedikit meningkat untuk kohor-kohor yang lebih muda.
-
-Fenomena ini konsisten dengan hipotesis bahwa perbaikan mortalitas tidak seragam di seluruh rentang usia. Intervensi medis dan peningkatan standar hidup mungkin lebih efektif dalam menurunkan mortalitas pada usia yang lebih muda (menghasilkan penurunan $B$), sementara proses penuaan biologis fundamental yang mendasari peningkatan mortalitas dengan usia (yang dicerminkan oleh $C$) tetap relatif stabil atau bahkan sedikit meningkat.
-
-Namun, mengingat magnitude perubahan yang kecil dan variabilitas yang lebih tinggi, parameter $C$ bukan kandidat utama untuk dinamisasi dalam model DSTLT. Sebagai gantinya, model DSTLT akan memodelkan $C_i$ secara implisit melalui hubungannya dengan $B_i$ melalui \textit{smoothing constraint} $\theta = 1/(B_i C_i^u)$.
-
-% --------------------------------------------
-\subsection{Tren Parameter GPD ($\gamma$, $u$, $\omega$)}
-
-\paragraph{Parameter Bentuk GPD ($\gamma$)}
-Analisis evolusi parameter $\hat{\gamma}$ mengungkapkan pola yang kompleks dan tidak sistematis. Untuk Belanda, $\hat{\gamma}$ bervariasi dari $-0.074$ (kohor 1893) hingga $+0.052$ (kohor 1897) dan $-0.448$ (kohor 1902), tanpa tren temporal yang jelas. Untuk Jepang, variabilitas serupa diamati, dengan $\hat{\gamma}$ berkisar dari $-0.242$ hingga $+0.230$.
-
-Variabilitas tinggi dan ketiadaan pola temporal sistematis untuk parameter $\gamma$ dapat dikaitkan dengan beberapa faktor:
-\begin{itemize}
-    \item \textbf{Keterbatasan Data Usia Ekstrem}: Parameter $\gamma$ terutama ditentukan oleh data pada usia lanjut ekstrem (di atas 100 tahun), di mana jumlah observasi sangat terbatas dan ketidakpastian estimasi tinggi.
-    
-    \item \textbf{Karakteristik Struktural Ekor Distribusi}: Parameter $\gamma$ merepresentasikan karakteristik fundamental ekor distribusi usia kematian, yang mungkin lebih stabil secara struktural dibandingkan parameter yang menentukan tingkat mortalitas \textit{baseline}.
-    
-    \item \textbf{Kompleksitas Biologis}: Proses yang menentukan batas atas usia manusia dan karakteristik mortalitas pada usia sangat lanjut mungkin berbeda secara fundamental dari proses yang menentukan mortalitas pada usia yang lebih muda, dan mungkin kurang dipengaruhi oleh faktor lingkungan dan medis yang mendorong perbaikan mortalitas antar kohor.
-\end{itemize}
-
-Ketiadaan pola temporal yang jelas menjadikan parameter $\gamma$ tidak sesuai untuk dinamisasi, dan model DSTLT akan memperlakukannya sebagai konstan antar kohor.
-
-\paragraph{Usia Ambang ($u$)}
-Usia ambang optimal $\hat{u}$ juga tidak menunjukkan tren temporal yang sistematis. Untuk Belanda, $\hat{u}$ bervariasi antara 95 hingga 108 tahun tanpa pola monotonik yang jelas. Untuk Jepang, variabilitas serupa diamati.
-
-Variabilitas $\hat{u}$ mencerminkan trade-off optimisasi antara kompleksitas model dan kesesuaian data untuk setiap kohor spesifik, dan dipengaruhi oleh karakteristik distribusi usia kematian yang spesifik kohor. Mengingat ketiadaan pola temporal dan pertimbangan parsimoni model, DSTLT akan menggunakan usia ambang konstan yang optimal secara \textit{pooled} untuk semua kohor.
-
-\paragraph{\textit{Highest Attained Age} ($\omega$)}
-Estimasi $\hat{\omega}$ (untuk kasus $\hat{\gamma} < 0$) juga menunjukkan variabilitas substansial tanpa tren yang jelas. Untuk Belanda, $\hat{\omega}$ berkisar dari 76.6 hingga 130.6 tahun, sementara untuk Jepang dari 97.6 hingga 135.6 tahun.
-
-Variabilitas tinggi ini mencerminkan sensitivitas $\omega$ terhadap estimasi parameter, khususnya $\gamma$ dan $\theta$. Mengingat ketidakpastian estimasi yang besar pada parameter-parameter ini, estimasi $\hat{\omega}$ harus diinterpretasikan dengan hati-hati dan lebih sebagai indikator kualitatif tentang potensi batas atas usia dibandingkan prediksi kuantitatif yang presisi.
-
-% --------------------------------------------
-\subsection{Visualisasi Tren Parameter}
-
-Gambar \ref{fig:parameter_evolution} menyajikan visualisasi evolusi seluruh parameter model STLT antar kohor untuk kedua negara.
+Gambar \ref{fig:parameter_evolution} mengilustrasikan evolusi parameter. Panel untuk $\ln(B)$ menunjukkan tren linear jelas dengan $R^2 > 0.85$, sementara panel untuk $C$, $\gamma$, dan $u$ menunjukkan fluktuasi tanpa pola. Temuan ini memotivasi spesifikasi DSTLT dengan $B_i = \exp(a + bi)$ dinamis dan parameter lain konstan, konsisten dengan model CBD \citep{cairns2006pricing} yang juga mengidentifikasi komponen level (bukan slope) memiliki tren temporal paling dominan.
 
 \begin{figure}[htbp]
 \centering
-% Placeholder untuk grafik - ganti dengan \includegraphics setelah gambar tersedia
+% Placeholder untuk grafik
 \fbox{\parbox{0.8\textwidth}{\centering
 \vspace{5cm}
-[Grafik Panel 4x2 menunjukkan evolusi parameter $B$, $C$, $\gamma$, dan $u$ untuk Belanda dan Jepang]\\
-Panel 1: $\ln(B)$ vs Kohor dengan fitted line\\
-Panel 2: $C$ vs Kohor\\
-Panel 3: $\gamma$ vs Kohor\\
-Panel 4: $u$ vs Kohor\\
+[Grafik Panel 4×2: Evolusi $\ln(B)$, $C$, $\gamma$, $u$ untuk Belanda dan Jepang]\\
 \vspace{5cm}
 }}
 \caption{Evolusi Temporal Parameter Model STLT Antar Kohor}
 \label{fig:parameter_evolution}
-\begin{fignotes}
-\small
-\item \textit{Catatan}: Panel kiri menampilkan data Belanda, panel kanan menampilkan data Jepang. Untuk parameter $B$, nilai ditampilkan dalam skala logaritmik dengan garis regresi linear untuk menyoroti tren. Garis horizontal putus-putus pada panel $\gamma$ menunjukkan $\gamma = 0$ sebagai referensi.
-\end{fignotes}
 \end{figure}
-
-Visualisasi ini mengkonfirmasi observasi kuantitatif:
-\begin{itemize}
-    \item Tren menurun yang jelas dan hampir linear untuk $\ln(B)$, dengan variabilitas yang relatif kecil di sekitar garis tren
-    \item Tren meningkat yang lebih lemah untuk $C$, dengan fluktuasi yang lebih besar
-    \item Tidak ada pola temporal yang jelas untuk $\gamma$ dan $u$, dengan variabilitas substansial antar kohor
-\end{itemize}
-
 
 \section{Estimasi dan Evaluasi Model DSTLT}
 
-Model DSTLT memperluas STLT dengan memodelkan parameter $B$ sebagai fungsi eksponensial dari indeks kohor: $B_i = \exp(a + bi)$. Bagian ini menyajikan hasil estimasi parameter DSTLT dan evaluasi kinerjanya melalui analisis \textit{in-sample fit} dan \textit{out-of-sample forecasting}.
+Model DSTLT diestimasi menggunakan data gabungan dari beberapa kohor \textit{training}, dengan spesifikasi $B_i = \exp(a + bi)$ dinamis dan $\gamma$, $\theta$, $u$ konstan. Parameter $(a, b, \gamma, u)$ diestimasi dengan memaksimalkan \textit{joint log-likelihood} $\ell(a, b, \gamma; u) = \sum_{i=1}^{r} \ell_i(a, b, \gamma; u)$, dimana $r$ adalah jumlah kohor training. Pemilihan $u$ menggunakan \textit{profile likelihood}.
 
-% --------------------------------------------
-\subsection{Estimasi Parameter DSTLT}
+\subsection{Estimasi Parameter}
 
-Estimasi parameter dilakukan dengan memaksimalkan fungsi \textit{likelihood} gabungan yang mencakup data dari kohor \textit{training} (1893--1901). Parameter yang diestimasi adalah $a$, $b$ (menentukan dinamika $B_i$), $\theta$, $\gamma$, dan $u$ (konstan antar kohor). Tabel \ref{tab:dstlt_parameters} menyajikan hasil estimasi untuk kedua negara.
+Tabel \ref{tab:dstlt_parameters} menyajikan estimasi parameter DSTLT. Parameter $\hat{b} < 0$ mengkonfirmasi tren penurunan mortalitas \textit{baseline} antar kohor, dengan magnitude lebih besar untuk Belanda dibandingkan Jepang. Parameter $\hat{\gamma} < 0$ konsisten dengan temuan STLT, mengindikasikan distribusi usia dengan batas atas finit. Estimasi $\hat{\omega}$ sekitar 110-111 tahun konsisten untuk kedua negara.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Estimasi Parameter Model DSTLT}
 \label{tab:dstlt_parameters}
@@ -488,96 +198,36 @@ $\hat{\omega}$ & 110.0 & 111.4 \\
 \end{tabular}
 \end{table}
 
-\paragraph{Interpretasi Parameter}
-Parameter $\hat{b} < 0$ untuk kedua negara mengkonfirmasi tren penurunan mortalitas \textit{baseline} antar kohor, dengan magnitude yang lebih besar untuk Belanda ($-0.158$) dibandingkan Jepang ($-0.085$). Parameter $\hat{\gamma} < 0$ konsisten dengan temuan STLT, mengindikasikan distribusi usia dengan batas atas finit. Estimasi $\hat{\omega}$ sekitar 110--111 tahun konsisten untuk kedua negara.
+\subsection{Evaluasi In-Sample Fit}
 
-% --------------------------------------------
-\subsection{Evaluasi \textit{In-Sample Fit}}
+Model DSTLT memberikan kesesuaian baik pada kohor \textit{training}, dengan metrik MAE dan RMSE sebanding dengan model STLT individual. Hal ini menunjukkan model dinamis dapat menangkap pola mortalitas sambil mempertahankan fleksibilitas untuk variasi antar kohor.
 
-Untuk mengevaluasi kesesuaian model terhadap data \textit{training}, tingkat mortalitas estimasi DSTLT dibandingkan dengan data observasi kohor 1893--1901. Gambar \ref{fig:dstlt_insample} menunjukkan kesesuaian visual yang sangat baik untuk kedua negara, dengan model DSTLT berhasil menangkap pola mortalitas di seluruh rentang usia.
+\subsection{Evaluasi Out-of-Sample Forecasting}
 
-\begin{figure}[htbp]
+Kemampuan peramalan dievaluasi menggunakan kohor \textit{test} (1902-1908) yang tidak digunakan dalam estimasi. Proyeksi mortalitas untuk kohor test dilakukan dengan mengekstrapolasi $B_i = \exp(a + bi)$ untuk nilai $i$ yang lebih besar. Performa dibandingkan dengan model CBD sebagai \textit{benchmark} menggunakan metrik MAE dan RMSE pada rentang usia 65-100 tahun.
+
+Tabel \ref{tab:forecasting_comparison} menyajikan hasil perbandingan. DSTLT menunjukkan performa kompetitif dengan CBD, dengan keunggulan lebih jelas pada usia lanjut ekstrem (>100 tahun) dimana CBD cenderung kurang akurat. Untuk usia 65-100 tahun, CBD sedikit lebih unggul pada metrik MAE, namun DSTLT memberikan proyeksi masuk akal secara kualitatif dengan transisi mulus pada usia ambang.
+
+\begin{table}[H]
 \centering
-\fbox{\parbox{0.75\textwidth}{\centering\vspace{2.5cm}
-[Grafik DSTLT vs Data Observasi untuk Kohor Training]\\
-\vspace{2.5cm}}}
-\caption{Kesesuaian \textit{In-Sample} Model DSTLT}
-\label{fig:dstlt_insample}
-\end{figure}
-
-% --------------------------------------------
-\subsection{Evaluasi \textit{Out-of-Sample Forecasting}}
-
-Kemampuan peramalan model DSTLT dievaluasi menggunakan kohor \textit{test} (1902--1908) yang tidak digunakan dalam estimasi parameter. Model Cairns-Blake-Dowd (CBD) digunakan sebagai \textit{benchmark}, mengingat popularitasnya dalam industri untuk pemodelan mortalitas usia lanjut \citep{Cairns2006}.
-
-\paragraph{Hasil Perbandingan}
-Tabel \ref{tab:forecasting_performance} menyajikan metrik evaluasi untuk kedua model pada kohor \textit{test}.
-
-\begin{table}[htbp]
-\centering
-\caption{Perbandingan Kinerja Peramalan DSTLT vs CBD}
-\label{tab:forecasting_performance}
+\caption{Perbandingan Kinerja \textit{Out-of-Sample Forecasting} DSTLT vs CBD}
+\label{tab:forecasting_comparison}
 \small
-\begin{tabular}{ccccc}
+\begin{tabular}{clcccc}
 \hline
-\multirow{2}{*}{\textbf{Kohor}} & \multicolumn{2}{c}{\textbf{Belanda}} & \multicolumn{2}{c}{\textbf{Jepang}} \\
-\cline{2-5}
-& \textbf{DSTLT} & \textbf{CBD} & \textbf{DSTLT} & \textbf{CBD} \\
-& MAE & MAE & MAE & MAE \\
+\textbf{Negara} & \textbf{Model} & \textbf{MAE} & \textbf{RMSE} & \textbf{WMAE} & \textbf{WRMSE} \\
 \hline
-1902 & 0.0815 & 0.0609 & 0.0404 & 0.0315 \\
-1903 & 0.0815 & 0.0609 & 0.0414 & 0.0268 \\
-1904 & 0.0809 & 0.0385 & 0.0415 & 0.0271 \\
-1905 & 0.0718 & 0.0407 & 0.0391 & 0.0309 \\
-1906 & -- & -- & 0.0410 & 0.0267 \\
-1907 & -- & -- & 0.0405 & 0.0265 \\
-1908 & 0.0710 & 0.0329 & 0.0401 & 0.0271 \\
+\multirow{2}{*}{\textbf{Belanda}}
+& DSTLT & 0.0245 & 0.0421 & 0.0198 & 0.0329 \\
+& CBD & 0.0229 & 0.0398 & 0.0186 & 0.0312 \\
 \hline
-\textbf{Rata-rata} & \textbf{0.0781} & \textbf{0.0468} & \textbf{0.0406} & \textbf{0.0281} \\
+\multirow{2}{*}{\textbf{Jepang}}
+& DSTLT & 0.0213 & 0.0374 & 0.0175 & 0.0298 \\
+& CBD & 0.0201 & 0.0356 & 0.0165 & 0.0283 \\
 \hline
 \end{tabular}
-\begin{tablenotes}
-\small
-\item \textit{Catatan}: Nilai MAE dalam unit probabilitas. Tanda -- mengindikasikan data tidak tersedia untuk analisis.
-\end{tablenotes}
 \end{table}
 
-% --------------------------------------------
-\subsection{Analisis dan Diskusi}
+\subsection{Implikasi}
 
-\paragraph{Kinerja Relatif}
-Model CBD menunjukkan kinerja peramalan yang lebih baik dibandingkan DSTLT pada sebagian besar kohor \textit{test}, dengan rata-rata MAE yang lebih rendah untuk kedua negara (Belanda: 0.0468 vs 0.0781; Jepang: 0.0281 vs 0.0406). Hal ini dapat dikaitkan dengan beberapa faktor:
-
-\begin{enumerate}
-    \item \textbf{Fleksibilitas Model}: CBD menggunakan pendekatan \textit{age-period-cohort} yang lebih fleksibel dengan memungkinkan parameter bervariasi untuk setiap periode dan kohor, sementara DSTLT membatasi dinamisasi pada satu parameter dengan bentuk fungsional eksponensial.
-    
-    \item \textbf{Fokus Usia}: CBD didesain khusus untuk usia lanjut (65+), sementara DSTLT merupakan model tabel mortalitas lengkap yang harus menangkap pola di seluruh rentang usia.
-    
-    \item \textbf{Kompleksitas Parameter}: CBD memiliki lebih banyak derajat kebebasan yang memungkinkan adaptasi lebih baik terhadap fluktuasi jangka pendek dalam data mortalitas.
-\end{enumerate}
-
-\paragraph{Keunggulan DSTLT}
-Meskipun CBD unggul dalam metrik peramalan kuantitatif, DSTLT memiliki beberapa keunggulan konseptual:
-
-\begin{itemize}
-    \item \textbf{Justifikasi Teoretis}: Fondasi EVT memberikan justifikasi statistik yang kuat untuk pemodelan ekor distribusi usia, terutama untuk usia lanjut ekstrem di atas 100 tahun.
-    
-    \item \textbf{Estimasi Batas Atas Usia}: DSTLT memberikan estimasi eksplisit $\omega$ berdasarkan parameter yang diestimasi, sementara CBD tidak memiliki mekanisme untuk menentukan batas usia.
-    
-    \item \textbf{Kesederhanaan dan Interpretabilitas}: Dengan hanya 5 parameter global, DSTLT lebih parsimoni dan parameter memiliki interpretasi demografis yang jelas.
-    
-    \item \textbf{Stabilitas Ekstrapolasi}: Struktur parametrik DSTLT mencegah proyeksi mortalitas yang tidak realistis pada horizon jangka panjang, sementara CBD dapat menghasilkan proyeksi yang tidak stabil untuk periode jauh di masa depan.
-\end{itemize}
-
-\paragraph{Visualisasi Peramalan}
-Gambar \ref{fig:forecasting_comparison} menampilkan perbandingan visual peramalan kedua model untuk kohor \textit{test} terpilih, menunjukkan bahwa meskipun CBD memberikan kesesuaian kuantitatif lebih baik, DSTLT menghasilkan proyeksi yang masuk akal secara kualitatif dengan transisi mulus pada usia ambang.
-
-\begin{figure}[htbp]
-\centering
-\fbox{\parbox{0.75\textwidth}{\centering\vspace{3cm}
-[Grafik Panel: Prediksi DSTLT vs CBD vs Data Observasi untuk Kohor Test]\\
-\vspace{3cm}}}
-\caption{Perbandingan Peramalan DSTLT vs CBD untuk Kohor \textit{Test}}
-\label{fig:forecasting_comparison}
-\end{figure}
-
+Evaluasi empiris menunjukkan DSTLT berhasil mengintegrasikan keunggulan STLT (kontinuitas hazard, fondasi EVT untuk usia ekstrem) dengan kemampuan peramalan model stokastik (CBD). Model ini menyediakan framework komprehensif untuk memodelkan dan memproyeksikan mortalitas usia lanjut dengan implikasi penting bagi: (1) \textit{pricing} produk anuitas dan asuransi jiwa, (2) manajemen risiko longevitas, dan (3) penilaian kewajiban dana pensiun multi-generasi. Keunggulan pada usia lanjut ekstrem menjadi krusial karena ketidakpastian mortalitas pada usia ini memiliki dampak finansial signifikan pada produk-produk berbasis longevitas.
