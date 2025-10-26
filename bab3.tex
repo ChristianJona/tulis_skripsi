@@ -10,14 +10,14 @@ Bab ini akan menganalisis secara mendalam setiap tahap pengembangan model, dimul
 
 \section{Model Threshold Life Table (TLT)}
 
-Model \textit{Threshold Life Table} (TLT) yang diperkenalkan oleh \citet{li2008threshold} menggunakan pendekatan \textit{piecewise} yang membagi distribusi usia kematian menjadi dua bagian berdasarkan usia ambang (\textit{threshold age}) $N$. Model ini dikembangkan untuk mengatasi keterbatasan model mortalitas tradisional dalam menangani karakteristik yang berbeda antara usia lanjut non-ekstrem dan usia lanjut ekstrem.
+Model \textit{Threshold Life Table} (TLT) yang diperkenalkan oleh \citet{li2008threshold} menggunakan pendekatan \textit{piecewise} yang membagi distribusi usia kematian menjadi dua bagian berdasarkan usia ambang (\textit{threshold age}) $u$. Model ini dikembangkan untuk mengatasi keterbatasan model mortalitas tradisional dalam menangani karakteristik yang berbeda antara usia lanjut non-ekstrem dan usia lanjut ekstrem.
 
 \subsection{Model Threshold Life Table (TLT)}
 
 Misalkan $X$ adalah variabel acak yang menyatakan usia kematian seseorang. Model TLT mendefinisikan fungsi distribusi kumulatif (CDF) $F(x) = P(X \leq x)$ secara \textit{piecewise} sebagai berikut:
 
 \paragraph{Komponen Gompertz ($x \leq N$):}
-Untuk usia di bawah atau sama dengan usia ambang $N$, digunakan distribusi Gompertz:
+Untuk usia di bawah atau sama dengan usia ambang $u$, digunakan distribusi Gompertz:
 \begin{equation}
 F(x) = 1 - \exp\left(-\frac{B}{\ln C}(C^x - 1)\right), \quad x \leq N,
 \label{eq:tlt_gompertz_cdf}
@@ -41,22 +41,22 @@ h(x) = \frac{f(x)}{S(x)} = BC^x, \quad x \leq N,
 \end{equation}
 yang menunjukkan peningkatan eksponensial seiring bertambahnya usia.
 
-\paragraph{Komponen Generalized Pareto Distribution ($x > N$):}
-Untuk usia di atas usia ambang $N$, digunakan Generalized Pareto Distribution (GPD) yang merupakan bagian dari Extreme Value Theory. GPD didefinisikan secara kondisional untuk \textit{exceedances} di atas ambang $N$. Fungsi survival kondisional untuk bagian ini adalah:
+\paragraph{Komponen Generalized Pareto Distribution ($x > u$):}
+Untuk usia di atas usia ambang $u$, digunakan Generalized Pareto Distribution (GPD) yang merupakan bagian dari Extreme Value Theory. GPD didefinisikan secara kondisional untuk \textit{exceedances} di atas ambang $u$. Fungsi survival kondisional untuk bagian ini adalah:
 \begin{equation}
-G(x-N; \theta, \gamma) = \left(1 + \frac{\gamma(x-N)}{\theta}\right)^{-1/\gamma}, \quad x > N,
+G(x-u; \theta, \gamma) = \left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}, \quad x > u,
 \label{eq:gpd_survival_conditional}
 \end{equation}
-dengan $\theta > 0$ adalah parameter skala dan $\gamma$ adalah parameter bentuk yang menentukan perilaku ekor distribusi. Fungsi survival keseluruhan untuk $x > N$ adalah:
+dengan $\theta > 0$ adalah parameter skala dan $\gamma$ adalah parameter bentuk yang menentukan perilaku ekor distribusi. Fungsi survival keseluruhan untuk $x > u$ adalah:
 \begin{equation}
-S(x) = S(N) \cdot G(x-N; \theta, \gamma), \quad x > N,
+S(x) = S(u) \cdot G(x-u; \theta, \gamma), \quad x > u,
 \label{eq:tlt_gpd_survival}
 \end{equation}
-yang memastikan kontinuitas fungsi survival pada $x = N$.
+yang memastikan kontinuitas fungsi survival pada $x = u$.
 
 Fungsi kepadatan probabilitas kondisional untuk bagian GPD adalah:
 \begin{equation}
-g(x-N; \theta, \gamma) = \frac{1}{\theta}\left(1 + \frac{\gamma(x-N)}{\theta}\right)^{-(1+1/\gamma)}, \quad x > N.
+g(x-u; \theta, \gamma) = \frac{1}{\theta}\left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-(1+1/\gamma)}, \quad x > u.
 \label{eq:gpd_pdf_conditional}
 \end{equation}
 
@@ -65,7 +65,7 @@ g(x-N; \theta, \gamma) = \frac{1}{\theta}\left(1 + \frac{\gamma(x-N)}{\theta}\ri
 Parameter bentuk $\gamma$ dalam distribusi GPD menentukan karakteristik ekor distribusi:
 
 \begin{itemize}
-    \item \textbf{$\gamma < 0$}: Distribusi memiliki batas atas (\textit{highest attained age}) $\omega = N + \theta/|\gamma|$. Kondisi ini mengimplikasikan bahwa terdapat usia maksimum yang dapat dicapai oleh populasi.
+    \item \textbf{$\gamma < 0$}: Distribusi memiliki batas atas (\textit{highest attained age}) $\omega = u + \theta/|\gamma|$. Kondisi ini mengimplikasikan bahwa terdapat usia maksimum yang dapat dicapai oleh populasi.
     
     \item \textbf{$\gamma = 0$}: Distribusi ekivalen dengan distribusi eksponensial, yang memiliki ekor yang menurun secara eksponensial.
     
@@ -120,8 +120,8 @@ yang menyatakan proporsi populasi awal yang meninggal pada interval usia $[x, x+
 Dengan mengabaikan konstanta kombinatorial yang tidak mempengaruhi estimator Maximum Likelihood, fungsi likelihood untuk model TLT dapat ditulis sebagai:
 \begin{equation}
 \begin{split}
-L(B, C, \theta, \gamma; N) = &\prod_{x=x_{\text{mulai}}}^{N-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
-&\times \prod_{x=N}^{\tau-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
+L(B, C, \theta, \gamma; u) = &\prod_{x=x_{\text{mulai}}}^{N-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
+&\times \prod_{x=u}^{\tau-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
 &\times \left(\frac{S(\tau)}{S(x_{\text{mulai}})}\right)^{l_\tau},
 \end{split}
 \label{eq:tlt_likelihood_full}
@@ -131,19 +131,19 @@ dimana fungsi survival $S(x)$ didefinisikan secara \textit{piecewise}:
 S(x) = 
 \begin{cases}
 \exp\left(-\frac{B}{\ln C}(C^x - 1)\right), & x \leq N \\[10pt]
-\exp\left(-\frac{B}{\ln C}(C^N - 1)\right) \cdot \left(1 + \frac{\gamma(x-N)}{\theta}\right)^{-1/\gamma}, & x > N.
+\exp\left(-\frac{B}{\ln C}(C^u - 1)\right) \cdot \left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}, & x > u.
 \end{cases}
 \label{eq:tlt_survival_piecewise}
 \end{equation}
 
-Suku pertama dalam persamaan \eqref{eq:tlt_likelihood_full} merepresentasikan kontribusi kematian pada usia non-ekstrem ($x < N$), suku kedua merepresentasikan kontribusi kematian pada usia ekstrem ($x \geq N$), dan suku ketiga merepresentasikan kontribusi dari individu yang bertahan hidup melampaui usia maksimum pengamatan (tersensor kanan).
+Suku pertama dalam persamaan \eqref{eq:tlt_likelihood_full} merepresentasikan kontribusi kematian pada usia non-ekstrem ($x < u$), suku kedua merepresentasikan kontribusi kematian pada usia ekstrem ($x \geq N$), dan suku ketiga merepresentasikan kontribusi dari individu yang bertahan hidup melampaui usia maksimum pengamatan (tersensor kanan).
 
 \subsubsection{Dekomposisi Log-Likelihood}
 
 Dengan mengambil logaritma dari persamaan \eqref{eq:tlt_likelihood_full}, diperoleh fungsi log-likelihood:
 \begin{equation}
 \begin{split}
-\ell(B, C, \theta, \gamma; N) = &\sum_{x=x_{\text{mulai}}}^{N-1} d_x \ln(S(x) - S(x+1)) + \sum_{x=N}^{\tau-1} d_x \ln(S(x) - S(x+1)) \\
+\ell(B, C, \theta, \gamma; u) = &\sum_{x=x_{\text{mulai}}}^{N-1} d_x \ln(S(x) - S(x+1)) + \sum_{x=u}^{\tau-1} d_x \ln(S(x) - S(x+1)) \\
 &+ l_\tau \ln(S(\tau)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}})).
 \end{split}
 \label{eq:tlt_loglik_expanded}
@@ -152,58 +152,58 @@ Dengan mengambil logaritma dari persamaan \eqref{eq:tlt_likelihood_full}, dipero
 Kunci dari dekomposisi terletak pada fakta bahwa tidak ada parameter yang dibagi antara bagian Gompertz dan bagian GPD. Bagian Gompertz hanya melibatkan parameter $\{B, C\}$, sedangkan bagian GPD hanya melibatkan parameter $\{\theta, \gamma\}$. Dengan memisahkan suku-suku yang hanya bergantung pada masing-masing komponen, fungsi log-likelihood dapat ditulis sebagai jumlah dua fungsi independen:
 
 \begin{equation}
-\ell(B, C, \theta, \gamma; N) = \ell_1(B, C; N) + \ell_2(\theta, \gamma; N),
+\ell(B, C, \theta, \gamma; u) = \ell_1(B, C; u) + \ell_2(\theta, \gamma; u),
 \label{eq:tlt_decomposition}
 \end{equation}
 
 dimana komponen pertama (bagian Gompertz):
 \begin{equation}
-\ell_1(B, C; N) = \sum_{x=x_{\text{mulai}}}^{N-1} d_x \ln(S(x) - S(x+1)) + l_N \ln(S(N)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}})),
+\ell_1(B, C; u) = \sum_{x=x_{\text{mulai}}}^{N-1} d_x \ln(S(x) - S(x+1)) + l_u \ln(S(u)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}})),
 \label{eq:tlt_gompertz_loglik}
 \end{equation}
 dengan $S(x) = \exp\left(-\frac{B}{\ln C}(C^x - 1)\right)$ untuk $x \leq N$, dan komponen kedua (bagian GPD):
 \begin{equation}
-\ell_2(\theta, \gamma; N) = \sum_{x=N}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_N \ln(S(N)),
+\ell_2(\theta, \gamma; u) = \sum_{x=u}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_u \ln(S(u)),
 \label{eq:tlt_gpd_loglik}
 \end{equation}
-dengan $S(x) = S(N) \cdot \left(1 + \frac{\gamma(x-N)}{\theta}\right)^{-1/\gamma}$ untuk $x > N$.
+dengan $S(x) = S(u) \cdot \left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}$ untuk $x > u$.
 
-Perhatikan bahwa $\ell_1$ hanya bergantung pada parameter $(B, C)$ dan $\ell_2$ hanya bergantung pada parameter $(\theta, \gamma)$, sementara suku $l_N \ln(S(N))$ muncul dengan tanda berlawanan pada kedua komponen sehingga saling menghilangkan dalam penjumlahan, menghasilkan bentuk \eqref{eq:tlt_loglik_expanded}.
+Perhatikan bahwa $\ell_1$ hanya bergantung pada parameter $(B, C)$ dan $\ell_2$ hanya bergantung pada parameter $(\theta, \gamma)$, sementara suku $l_u \ln(S(u))$ muncul dengan tanda berlawanan pada kedua komponen sehingga saling menghilangkan dalam penjumlahan, menghasilkan bentuk \eqref{eq:tlt_loglik_expanded}.
 
 \subsubsection{Implikasi untuk Estimasi Parameter}
 
-Struktur aditif pada persamaan \eqref{eq:tlt_decomposition} memiliki implikasi penting untuk prosedur estimasi. Untuk nilai $N$ yang tetap, estimasi parameter dapat dilakukan secara terpisah:
+Struktur aditif pada persamaan \eqref{eq:tlt_decomposition} memiliki implikasi penting untuk prosedur estimasi. Untuk nilai $u$ yang tetap, estimasi parameter dapat dilakukan secara terpisah:
 
 \begin{enumerate}
     \item \textbf{Estimasi parameter Gompertz}: 
     \begin{equation}
-    \{\hat{B}(N), \hat{C}(N)\} = \arg\max_{B,C} \ell_1(B, C; N),
+    \{\hat{B}(u), \hat{C}(u)\} = \arg\max_{B,C} \ell_1(B, C; u),
     \label{eq:mle_gompertz}
     \end{equation}
-    yang hanya melibatkan optimisasi dua parameter pada data usia $x_{\text{mulai}}$ hingga $N$.
+    yang hanya melibatkan optimisasi dua parameter pada data usia $x_{\text{mulai}}$ hingga $u$.
     
     \item \textbf{Estimasi parameter GPD}: 
     \begin{equation}
-    \{\hat{\theta}(N), \hat{\gamma}(N)\} = \arg\max_{\theta,\gamma} \ell_2(\theta, \gamma; N),
+    \{\hat{\theta}(u), \hat{\gamma}(u)\} = \arg\max_{\theta,\gamma} \ell_2(\theta, \gamma; u),
     \label{eq:mle_gpd}
     \end{equation}
-    yang hanya melibatkan optimisasi dua parameter pada data usia $N$ hingga $\tau$.
+    yang hanya melibatkan optimisasi dua parameter pada data usia $u$ hingga $\tau$.
 \end{enumerate}
 
 \subsection{Pemilihan Usia Ambang Optimal}
 
-Meskipun parameter untuk bagian Gompertz dan GPD dapat diestimasi secara terpisah, pemilihan usia ambang $N$ tetap memerlukan pendekatan yang mempertimbangkan kesesuaian keseluruhan model. \citet{li2008threshold} mengembangkan metode berbasis \textit{profile likelihood} untuk pemilihan usia ambang optimal.
+Meskipun parameter untuk bagian Gompertz dan GPD dapat diestimasi secara terpisah, pemilihan usia ambang $u$ tetap memerlukan pendekatan yang mempertimbangkan kesesuaian keseluruhan model. \citet{li2008threshold} mengembangkan metode berbasis \textit{profile likelihood} untuk pemilihan usia ambang optimal.
 
 \subsubsection{Konsep Profile Likelihood}
 
-\textit{Profile likelihood} adalah fungsi likelihood yang dievaluasi pada estimator Maximum Likelihood (MLE) dari parameter lain, dipandang sebagai fungsi dari parameter yang tersisa. Dalam konteks model TLT, untuk setiap kandidat nilai $N$, dihitung:
+\textit{Profile likelihood} adalah fungsi likelihood yang dievaluasi pada estimator Maximum Likelihood (MLE) dari parameter lain, dipandang sebagai fungsi dari parameter yang tersisa. Dalam konteks model TLT, untuk setiap kandidat nilai $u$, dihitung:
 
 \begin{equation}
-\ell_p(N) = \ell_1(\hat{B}(N), \hat{C}(N); N) + \ell_2(\hat{\theta}(N), \hat{\gamma}(N); N),
+\ell_p(u) = \ell_1(\hat{B}(u), \hat{C}(u); u) + \ell_2(\hat{\theta}(u), \hat{\gamma}(u); u),
 \label{eq:profile_likelihood}
 \end{equation}
 
-dimana $\hat{B}(N), \hat{C}(N), \hat{\theta}(N), \hat{\gamma}(N)$ adalah estimator MLE yang bergantung pada nilai $N$.
+dimana $\hat{B}(u), \hat{C}(u), \hat{\theta}(u), \hat{\gamma}(u)$ adalah estimator MLE yang bergantung pada nilai $u$.
 
 \subsubsection{Algoritma Pemilihan Usia Ambang}
 
@@ -212,34 +212,34 @@ Berdasarkan implementasi \citet{li2008threshold}, algoritma pemilihan usia amban
 \begin{enumerate}
     \item \textbf{Inisialisasi}:
     \begin{itemize}
-        \item Tentukan rentang kandidat usia ambang: $N \in \{N_{\min}, N_{\min} + 1, \ldots, N_{\max}\}$
-        \item Umumnya, $N_{\min} = 85$ dan $N_{\max} = 98$ atau 100
-        \item Set $\ell_p^* = -\infty$ dan $\hat{N} = \emptyset$
+        \item Tentukan rentang kandidat usia ambang: $u \in \{u_{\min}, u_{\min} + 1, \ldots, u_{\max}\}$
+        \item Umumnya, $u_{\min} = 85$ dan $u_{\max} = 98$ atau 100
+        \item Set $\ell_p^* = -\infty$ dan $\hat{u} = \emptyset$
     \end{itemize}
     
-    \item \textbf{Iterasi untuk setiap kandidat $N$}:
+    \item \textbf{Iterasi untuk setiap kandidat $u$}:
     \begin{enumerate}
-        \item Estimasi parameter Gompertz $\{\hat{B}(N), \hat{C}(N)\}$ dengan memaksimalkan $\ell_1(B, C; N)$ menggunakan algoritma optimisasi numerik (misalnya, \texttt{optim()} dalam R dengan metode L-BFGS-B)
+        \item Estimasi parameter Gompertz $\{\hat{B}(u), \hat{C}(u)\}$ dengan memaksimalkan $\ell_1(B, C; u)$ menggunakan algoritma optimisasi numerik (misalnya, \texttt{optim()} dalam R dengan metode L-BFGS-B)
         
-        \item Estimasi parameter GPD $\{\hat{\theta}(N), \hat{\gamma}(N)\}$ dengan memaksimalkan $\ell_2(\theta, \gamma; N)$
+        \item Estimasi parameter GPD $\{\hat{\theta}(u), \hat{\gamma}(u)\}$ dengan memaksimalkan $\ell_2(\theta, \gamma; u)$
         
-        \item Hitung profile log-likelihood: $\ell_p(N)$ menggunakan persamaan \eqref{eq:profile_likelihood}
+        \item Hitung profile log-likelihood: $\ell_p(u)$ menggunakan persamaan \eqref{eq:profile_likelihood}
         
-        \item Jika $\ell_p(N) > \ell_p^*$, update $\ell_p^* = \ell_p(N)$ dan $\hat{N} = N$
+        \item Jika $\ell_p(u) > \ell_p^*$, update $\ell_p^* = \ell_p(u)$ dan $\hat{u} = u$
     \end{enumerate}
     
-    \item \textbf{Output}: Usia ambang optimal $\hat{N}$ dan parameter model terkait $\{\hat{B}(\hat{N}), \hat{C}(\hat{N}), \hat{\theta}(\hat{N}), \hat{\gamma}(\hat{N})\}$
+    \item \textbf{Output}: Usia ambang optimal $\hat{u}$ dan parameter model terkait $\{\hat{B}(\hat{u}), \hat{C}(\hat{u}), \hat{\theta}(\hat{u}), \hat{\gamma}(\hat{u})\}$
 \end{enumerate}
 
 Pendekatan \textit{profile likelihood} ini memberikan metode objektif untuk menentukan titik transisi yang optimal antara model Gompertz dan GPD berdasarkan kesesuaian data secara keseluruhan.
 
 \subsection{Keterbatasan Model TLT}
 
-Meskipun model TLT memberikan pendekatan yang lebih objektif dan berbasis data untuk pemodelan mortalitas usia lanjut, Model TLT tidak menjamin kemulusan transisi fungsi hazard pada usia ambang $N$. Secara umum, $\lim_{x \to N^-} h(x) \neq \lim_{x \to N^+} h(x)$, yang dapat menimbulkan loncatan mendadak dalam laju mortalitas sesaat. Kondisi ini kurang realistis secara biologis karena mengimplikasikan perubahan mortalitas yang tiba-tiba. Hal ini menjadi motivasi utama pengembangan model STLT yang akan dibahas pada bagian selanjutnya, dimana \textit{smoothing constraint} diperkenalkan untuk memastikan kemulusan fungsi hazard pada usia ambang.
+Meskipun model TLT memberikan pendekatan yang lebih objektif dan berbasis data untuk pemodelan mortalitas usia lanjut, Model TLT tidak menjamin kemulusan transisi fungsi hazard pada usia ambang $u$. Secara umum, $\lim_{x \to u^-} h(x) \neq \lim_{x \to u^+} h(x)$, yang dapat menimbulkan loncatan mendadak dalam laju mortalitas sesaat. Kondisi ini kurang realistis secara biologis karena mengimplikasikan perubahan mortalitas yang tiba-tiba. Hal ini menjadi motivasi utama pengembangan model STLT yang akan dibahas pada bagian selanjutnya, dimana \textit{smoothing constraint} diperkenalkan untuk memastikan kemulusan fungsi hazard pada usia ambang.
 
 \section{Model Smoothed Threshold Life Table (STLT)}
 
-Model Threshold Life Table (TLT) yang telah dibahas pada bagian sebelumnya memberikan kerangka kerja yang solid untuk pemodelan mortalitas usia lanjut dengan mengintegrasikan Extreme Value Theory. Namun, model ini memiliki keterbatasan mendasar: fungsi hazard tidak dijamin kontinu pada usia ambang $N$. Bagian ini membahas pengembangan model Smoothed Threshold Life Table (STLT) yang mengatasi keterbatasan tersebut melalui penambahan \textit{smoothing constraint}.
+Model Threshold Life Table (TLT) yang telah dibahas pada bagian sebelumnya memberikan kerangka kerja yang solid untuk pemodelan mortalitas usia lanjut dengan mengintegrasikan Extreme Value Theory. Namun, model ini memiliki keterbatasan mendasar: fungsi hazard tidak dijamin kontinu pada usia ambang $u$. Bagian ini membahas pengembangan model Smoothed Threshold Life Table (STLT) yang mengatasi keterbatasan tersebut melalui penambahan \textit{smoothing constraint}.
 
 \subsection{Masalah Diskontinuitas Fungsi Hazard pada Model TLT}
 
@@ -251,7 +251,7 @@ Fungsi hazard merepresentasikan laju mortalitas sesaat pada usia tertentu, kondi
 h(x) = 
 \begin{cases}
 BC^x, & x \leq N \quad \text{(Gompertz)} \\[8pt]
-\displaystyle\frac{1}{\theta + \gamma(x-N)}, & x > N \quad \text{(GPD)}
+\displaystyle\frac{1}{\theta + \gamma(x-u)}, & x > u \quad \text{(GPD)}
 \end{cases}
 \label{eq:tlt_hazard_piecewise}
 \end{equation}
@@ -263,25 +263,25 @@ h_1(x) = \frac{f(x)}{S(x)} = \frac{BC^x \exp\left(-\frac{B}{\ln C}(C^x - 1)\righ
 \end{equation}
 yang menunjukkan pertumbuhan eksponensial seiring bertambahnya usia.
 
-Untuk bagian GPD ($x > N$), fungsi hazard diperoleh dari fungsi survival kondisional $G(x-N; \theta, \gamma) = \left(1 + \frac{\gamma(x-N)}{\theta}\right)^{-1/\gamma}$. Dengan diferensiasi dan manipulasi aljabar:
+Untuk bagian GPD ($x > u$), fungsi hazard diperoleh dari fungsi survival kondisional $G(x-u; \theta, \gamma) = \left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}$. Dengan diferensiasi dan manipulasi aljabar:
 \begin{align}
-h_2(x) &= \frac{g(x-N; \theta, \gamma)}{G(x-N; \theta, \gamma)} \nonumber \\
-&= \frac{\frac{1}{\theta}\left(1 + \frac{\gamma(x-N)}{\theta}\right)^{-(1+1/\gamma)}}{\left(1 + \frac{\gamma(x-N)}{\theta}\right)^{-1/\gamma}} \nonumber \\
-&= \frac{1}{\theta + \gamma(x-N)}.
+h_2(x) &= \frac{g(x-u; \theta, \gamma)}{G(x-u; \theta, \gamma)} \nonumber \\
+&= \frac{\frac{1}{\theta}\left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-(1+1/\gamma)}}{\left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}} \nonumber \\
+&= \frac{1}{\theta + \gamma(x-u)}.
 \label{eq:hazard_gpd_derivation}
 \end{align}
 
 \subsubsection{Evaluasi Kontinuitas pada Usia Ambang}
 
-Pada titik transisi $x = N$, nilai fungsi hazard dari kedua komponen adalah:
+Pada titik transisi $x = u$, nilai fungsi hazard dari kedua komponen adalah:
 \begin{itemize}
-    \item Limit dari kiri (Gompertz): $\lim_{x \to N^-} h(x) = BC^N$
-    \item Limit dari kanan (GPD): $\lim_{x \to N^+} h(x) = \frac{1}{\theta + \gamma(N-N)} = \frac{1}{\theta}$
+    \item Limit dari kiri (Gompertz): $\lim_{x \to u^-} h(x) = BC^u$
+    \item Limit dari kanan (GPD): $\lim_{x \to u^+} h(x) = \frac{1}{\theta + \gamma(N-N)} = \frac{1}{\theta}$
 \end{itemize}
 
-Secara umum, tidak terdapat jaminan bahwa $BC^N = \frac{1}{\theta}$. Dalam estimasi model TLT, parameter $(B, C)$ dan $(\theta, \gamma)$ diestimasi secara independen untuk masing-masing komponen, sehingga kondisi kontinuitas tidak secara otomatis terpenuhi. Ketidaksamaan ini mengakibatkan diskontinuitas (loncatan) pada fungsi hazard:
+Secara umum, tidak terdapat jaminan bahwa $BC^u = \frac{1}{\theta}$. Dalam estimasi model TLT, parameter $(B, C)$ dan $(\theta, \gamma)$ diestimasi secara independen untuk masing-masing komponen, sehingga kondisi kontinuitas tidak secara otomatis terpenuhi. Ketidaksamaan ini mengakibatkan diskontinuitas (loncatan) pada fungsi hazard:
 \begin{equation}
-\Delta h(N) = h_1(N) - h_2(N) = BC^N - \frac{1}{\theta} \neq 0.
+\Delta h(u) = h_1(u) - h_2(u) = BC^u - \frac{1}{\theta} \neq 0.
 \label{eq:hazard_jump}
 \end{equation}
 
@@ -291,33 +291,33 @@ Loncatan mendadak dalam laju mortalitas sesaat tidak memiliki justifikasi biolog
 
 \subsection{Derivasi Smoothing Constraint}
 
-Model STLT dikembangkan dengan menambahkan kondisi kontinuitas eksplisit pada fungsi hazard di usia ambang $N$. Bagian ini menyajikan derivasi matematis lengkap untuk \textit{smoothing constraint}.
+Model STLT dikembangkan dengan menambahkan kondisi kontinuitas eksplisit pada fungsi hazard di usia ambang $u$. Bagian ini menyajikan derivasi matematis lengkap untuk \textit{smoothing constraint}.
 
-Untuk memastikan fungsi hazard kontinu pada $x = N$, dikenakan kondisi:
+Untuk memastikan fungsi hazard kontinu pada $x = u$, dikenakan kondisi:
 \begin{equation}
-h_1(N) = h_2(N).
+h_1(u) = h_2(u).
 \label{eq:smoothing_condition}
 \end{equation}
 
 Substitusi definisi fungsi hazard dari persamaan \eqref{eq:tlt_hazard_piecewise}:
 \begin{equation}
-BC^N = \frac{1}{\theta + \gamma(N-N)}.
+BC^u = \frac{1}{\theta + \gamma(N-N)}.
 \label{eq:smoothing_substitution}
 \end{equation}
 
-Perhatikan bahwa pada $x = N$, suku $\gamma(x-N)$ bernilai nol, sehingga persamaan menjadi:
+Perhatikan bahwa pada $x = u$, suku $\gamma(x-u)$ bernilai nol, sehingga persamaan menjadi:
 \begin{equation}
-BC^N = \frac{1}{\theta}.
+BC^u = \frac{1}{\theta}.
 \label{eq:smoothing_simplified}
 \end{equation}
 
 Dari persamaan \eqref{eq:smoothing_simplified}, diperoleh hubungan eksplisit antara parameter skala GPD dengan parameter Gompertz:
 \begin{equation}
-\boxed{\theta = \frac{1}{BC^N}}
+\boxed{\theta = \frac{1}{BC^u}}
 \label{eq:theta_constraint}
 \end{equation}
 
-Persamaan \eqref{eq:theta_constraint} merupakan hasil kunci dari \textit{smoothing constraint}. Hubungan ini menunjukkan bahwa parameter skala GPD ($\theta$) bukan lagi parameter bebas yang dapat diestimasi secara independen, melainkan merupakan fungsi deterministik dari parameter Gompertz $(B, C)$ dan usia ambang $N$.
+Persamaan \eqref{eq:theta_constraint} merupakan hasil kunci dari \textit{smoothing constraint}. Hubungan ini menunjukkan bahwa parameter skala GPD ($\theta$) bukan lagi parameter bebas yang dapat diestimasi secara independen, melainkan merupakan fungsi deterministik dari parameter Gompertz $(B, C)$ dan usia ambang $u$.
 
 \subsection{Formula Model Smooth Threshold Life Table (STLT)}
 
@@ -325,7 +325,7 @@ Dengan menerapkan \textit{smoothing constraint}, model STLT dapat diformulasikan
 
 \\subsection{Formulasi Model STLT}
 
-Dengan menerapkan \textit{smoothing constraint} $\theta = \frac{1}{BC^N}$, model STLT dapat diformulasikan secara lengkap. Berbeda dengan model TLT, parameter skala GPD ($\theta$) bukan lagi parameter bebas, melainkan ditentukan oleh parameter Gompertz dan usia ambang.
+Dengan menerapkan \textit{smoothing constraint} $\theta = \frac{1}{BC^u}$, model STLT dapat diformulasikan secara lengkap. Berbeda dengan model TLT, parameter skala GPD ($\theta$) bukan lagi parameter bebas, melainkan ditentukan oleh parameter Gompertz dan usia ambang.
 
 \subsubsection{Komponen Gompertz ($x \leq N$)}
 
@@ -351,17 +351,17 @@ h(x) = BC^x, \quad x \leq N.
 
 Parameter model untuk bagian ini adalah $(B, C)$ dengan interpretasi yang sama seperti pada model TLT: $B > 0$ adalah parameter skala yang merepresentasikan tingkat mortalitas dasar, dan $C > 1$ adalah parameter bentuk yang mengatur laju peningkatan mortalitas.
 
-\subsubsection{Komponen GPD ($x > N$)}
+\subsubsection{Komponen GPD ($x > u$)}
 
 Untuk usia yang melebihi usia ambang, model STLT menggunakan Generalized Pareto Distribution dengan parameter skala yang ditentukan oleh \textit{smoothing constraint}.
 
 \paragraph{Fungsi Distribusi Kumulatif:}
 
-Dengan substitusi $\theta = \frac{1}{BC^N}$ ke dalam formulasi GPD, diperoleh tiga kasus bergantung pada nilai parameter bentuk $\gamma$:
+Dengan substitusi $\theta = \frac{1}{BC^u}$ ke dalam formulasi GPD, diperoleh tiga kasus bergantung pada nilai parameter bentuk $\gamma$:
 
 \textbf{Kasus 1: $\gamma > 0$ (ekor berat, tidak ada batas atas usia)}
 \begin{equation}
-F(x) = 1 - S(N) \left(1 + \gamma \cdot BC^N(x-N)\right)^{-1/\gamma}, \quad x > N.
+F(x) = 1 - S(u) \left(1 + \gamma \cdot BC^u(x-u)\right)^{-1/\gamma}, \quad x > u.
 \label{eq:stlt_gpd_cdf_positive}
 \end{equation}
 
@@ -369,19 +369,19 @@ F(x) = 1 - S(N) \left(1 + \gamma \cdot BC^N(x-N)\right)^{-1/\gamma}, \quad x > N
 
 Untuk $\gamma \to 0$, GPD konvergen ke distribusi eksponensial:
 \begin{equation}
-F(x) = 1 - S(N) \exp\left(-BC^N(x-N)\right), \quad x > N.
+F(x) = 1 - S(u) \exp\left(-BC^u(x-u)\right), \quad x > u.
 \label{eq:stlt_gpd_cdf_zero}
 \end{equation}
 
 \textbf{Kasus 3: $\gamma < 0$ (ekor terbatas, terdapat batas atas usia)}
 \begin{equation}
-F(x) = 1 - S(N) \left(1 - |\gamma| \cdot BC^N(x-N)\right)^{1/|\gamma|}, \quad N < x < N + \frac{1}{BC^N|\gamma|}.
+F(x) = 1 - S(u) \left(1 - |\gamma| \cdot BC^u(x-u)\right)^{1/|\gamma|}, \quad N < x < u + \frac{1}{BC^u|\gamma|}.
 \label{eq:stlt_gpd_cdf_negative}
 \end{equation}
 
 Untuk kasus $\gamma < 0$, terdapat batas atas usia (\textit{highest attained age}):
 \begin{equation}
-\omega = N + \frac{\theta}{|\gamma|} = N + \frac{1}{BC^N|\gamma|},
+\omega = u + \frac{\theta}{|\gamma|} = u + \frac{1}{BC^u|\gamma|},
 \label{eq:stlt_omega}
 \end{equation}
 dimana $F(\omega) = 1$ dan $S(\omega) = 0$.
@@ -392,49 +392,49 @@ Fungsi survival untuk bagian GPD dapat ditulis sebagai:
 
 \textbf{Untuk $\gamma \neq 0$:}
 \begin{equation}
-S(x) = S(N) \left(1 + \gamma \cdot BC^N(x-N)\right)^{-1/\gamma}, \quad x > N,
+S(x) = S(u) \left(1 + \gamma \cdot BC^u(x-u)\right)^{-1/\gamma}, \quad x > u,
 \label{eq:stlt_gpd_survival_general}
 \end{equation}
 dengan batasan $x < \omega$ jika $\gamma < 0$.
 
 \textbf{Untuk $\gamma = 0$:}
 \begin{equation}
-S(x) = S(N) \exp\left(-BC^N(x-N)\right), \quad x > N.
+S(x) = S(u) \exp\left(-BC^u(x-u)\right), \quad x > u.
 \label{eq:stlt_gpd_survival_zero}
 \end{equation}
 
-Perhatikan bahwa dalam semua formulasi di atas, nilai $S(N)$ dihitung menggunakan fungsi survival Gompertz pada persamaan \eqref{eq:stlt_gompertz_survival}, sehingga memastikan kontinuitas fungsi survival pada $x = N$.
+Perhatikan bahwa dalam semua formulasi di atas, nilai $S(u)$ dihitung menggunakan fungsi survival Gompertz pada persamaan \eqref{eq:stlt_gompertz_survival}, sehingga memastikan kontinuitas fungsi survival pada $x = u$.
 
 \paragraph{Fungsi Hazard:}
 
 Fungsi hazard untuk bagian GPD adalah:
 \begin{equation}
-h(x) = \frac{1}{\frac{1}{BC^N} + \gamma(x-N)} = \frac{BC^N}{1 + \gamma \cdot BC^N(x-N)}, \quad x > N.
+h(x) = \frac{1}{\frac{1}{BC^u} + \gamma(x-u)} = \frac{BC^u}{1 + \gamma \cdot BC^u(x-u)}, \quad x > u.
 \label{eq:stlt_gpd_hazard}
 \end{equation}
 
 \subsubsection{Verifikasi Kontinuitas Fungsi Hazard}
 
-Keunggulan utama model STLT adalah kontinuitas fungsi hazard pada usia ambang $N$. Hal ini dapat diverifikasi dengan mengevaluasi limit dari kiri dan kanan:
+Keunggulan utama model STLT adalah kontinuitas fungsi hazard pada usia ambang $u$. Hal ini dapat diverifikasi dengan mengevaluasi limit dari kiri dan kanan:
 
 \textbf{Limit dari kiri (Gompertz):}
 \begin{equation}
-\lim_{x \to N^-} h(x) = BC^N.
+\lim_{x \to u^-} h(x) = BC^u.
 \label{eq:hazard_left_limit}
 \end{equation}
 
 \textbf{Limit dari kanan (GPD):}
 \begin{equation}
-\lim_{x \to N^+} h(x) = \frac{BC^N}{1 + \gamma \cdot BC^N(N-N)} = \frac{BC^N}{1 + 0} = BC^N.
+\lim_{x \to u^+} h(x) = \frac{BC^u}{1 + \gamma \cdot BC^u(N-N)} = \frac{BC^u}{1 + 0} = BC^u.
 \label{eq:hazard_right_limit}
 \end{equation}
 
 Karena kedua limit bernilai sama, maka:
 \begin{equation}
-h(N^-) = h(N^+) = BC^N,
+h(u^-) = h(u^+) = BC^u,
 \label{eq:hazard_continuity}
 \end{equation}
-yang membuktikan bahwa fungsi hazard kontinu pada $x = N$. Kontinuitas ini memastikan tidak ada loncatan mendadak dalam laju mortalitas sesaat, sehingga menghasilkan transisi yang lebih realistis secara biologis antara usia lanjut non-ekstrem dan usia lanjut ekstrem.
+yang membuktikan bahwa fungsi hazard kontinu pada $x = u$. Kontinuitas ini memastikan tidak ada loncatan mendadak dalam laju mortalitas sesaat, sehingga menghasilkan transisi yang lebih realistis secara biologis antara usia lanjut non-ekstrem dan usia lanjut ekstrem.
 
 \subsubsection{Interpretasi Parameter}
 
@@ -447,7 +447,7 @@ Model STLT memiliki tiga parameter bebas untuk estimasi: $(B, C, \gamma)$, denga
     
     \item \textbf{$\gamma$}: Parameter bentuk GPD yang menentukan karakteristik ekor distribusi dan keberadaan batas atas usia. Nilai $\gamma < 0$ (yang umum dalam aplikasi mortalitas manusia) mengimplikasikan adanya batas maksimum usia yang dapat dicapai.
     
-    \item \textbf{$\theta = \frac{1}{BC^N}$}: Parameter skala GPD yang secara otomatis ditentukan oleh constraint untuk memastikan kontinuitas hazard. Parameter ini mengatur dispersi distribusi exceedance di atas usia ambang.
+    \item \textbf{$\theta = \frac{1}{BC^u}$}: Parameter skala GPD yang secara otomatis ditentukan oleh constraint untuk memastikan kontinuitas hazard. Parameter ini mengatur dispersi distribusi exceedance di atas usia ambang.
 \end{itemize}
 
 Hubungan fungsional antara $\theta$ dan parameter lainnya menciptakan struktur model yang terintegrasi, dimana kedua komponen (Gompertz dan GPD) tidak lagi independen tetapi saling terhubung melalui kondisi kemulusan.
@@ -457,8 +457,8 @@ Hubungan fungsional antara $\theta$ dan parameter lainnya menciptakan struktur m
 Fungsi likelihood untuk model STLT dengan parameter $\boldsymbol{\theta} = (B, C, \gamma, N)$ adalah:
 \begin{equation}
 \begin{split}
-L_{\text{STLT}}(B, C, \gamma; N) = &\prod_{x=x_{\text{mulai}}}^{N-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
-&\times \prod_{x=N}^{\tau-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
+L_{\text{STLT}}(B, C, \gamma; u) = &\prod_{x=x_{\text{mulai}}}^{N-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
+&\times \prod_{x=u}^{\tau-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
 &\times \left(\frac{S(\tau)}{S(x_{\text{mulai}})}\right)^{l_\tau},
 \end{split}
 \label{eq:stlt_likelihood}
@@ -467,7 +467,7 @@ dengan fungsi survival $S(x)$ yang didefinisikan pada persamaan \eqref{eq:stlt_s
 
 Fungsi log-likelihood adalah:
 \begin{equation}
-\ell(B, C, \gamma; N) = \sum_{x=x_{\text{mulai}}}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}})).
+\ell(B, C, \gamma; u) = \sum_{x=x_{\text{mulai}}}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}})).
 \label{eq:stlt_loglikelihood}
 \end{equation}
 
@@ -480,35 +480,35 @@ Estimasi parameter model STLT menggunakan metode Maximum Likelihood Estimation (
 \begin{enumerate}
     \item \textbf{Inisialisasi}:
     \begin{itemize}
-        \item Tentukan rentang kandidat usia ambang: $N \in \{N_{\min}, N_{\min}+1, \ldots, N_{\max}\}$
-        \item Umumnya $N_{\min} = 85$ dan $N_{\max} = 100$
-        \item Set $\ell_p^* = -\infty$ dan $\hat{N} = \emptyset$
+        \item Tentukan rentang kandidat usia ambang: $u \in \{u_{\min}, u_{\min}+1, \ldots, u_{\max}\}$
+        \item Umumnya $u_{\min} = 85$ dan $u_{\max} = 100$
+        \item Set $\ell_p^* = -\infty$ dan $\hat{u} = \emptyset$
     \end{itemize}
     
-    \item \textbf{Iterasi untuk setiap kandidat $N$}:
+    \item \textbf{Iterasi untuk setiap kandidat $u$}:
     \begin{enumerate}
         \item Definisikan fungsi objektif:
         \begin{equation}
-        \ell(B, C, \gamma; N) = \sum_{x=x_{\text{mulai}}}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}}))
+        \ell(B, C, \gamma; u) = \sum_{x=x_{\text{mulai}}}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}}))
         \end{equation}
-        dengan $S(x)$ menggunakan constraint $\theta = \frac{1}{BC^N}$.
+        dengan $S(x)$ menggunakan constraint $\theta = \frac{1}{BC^u}$.
         
         \item Estimasi parameter $(B, C, \gamma)$ secara simultan menggunakan algoritma optimisasi numerik (misalnya, L-BFGS-B dalam R) dengan batasan $B > 0$, $C > 1$:
         \begin{equation}
-        \{\hat{B}(N), \hat{C}(N), \hat{\gamma}(N)\} = \arg\max_{B, C, \gamma} \ell(B, C, \gamma; N)
+        \{\hat{B}(u), \hat{C}(u), \hat{\gamma}(u)\} = \arg\max_{B, C, \gamma} \ell(B, C, \gamma; u)
         \end{equation}
         
-        \item Hitung \textit{profile log-likelihood}: $\ell_p(N) = \ell(\hat{B}(N), \hat{C}(N), \hat{\gamma}(N); N)$
+        \item Hitung \textit{profile log-likelihood}: $\ell_p(u) = \ell(\hat{B}(u), \hat{C}(u), \hat{\gamma}(u); u)$
         
-        \item Jika $\ell_p(N) > \ell_p^*$, update $\ell_p^* = \ell_p(N)$ dan $\hat{N} = N$
+        \item Jika $\ell_p(u) > \ell_p^*$, update $\ell_p^* = \ell_p(u)$ dan $\hat{u} = u$
     \end{enumerate}
     
     \item \textbf{Output}: 
     \begin{itemize}
-        \item Usia ambang optimal: $\hat{N}$
-        \item Parameter model: $\{\hat{B}(\hat{N}), \hat{C}(\hat{N}), \hat{\gamma}(\hat{N})\}$
-        \item Parameter derived: $\hat{\theta} = \frac{1}{\hat{B}(\hat{N})\hat{C}(\hat{N})^{\hat{N}}}$
-        \item Jika $\hat{\gamma} < 0$, hitung \textit{highest attained age}: $\hat{\omega} = \hat{N} + \frac{\hat{\theta}}{|\hat{\gamma}|}$
+        \item Usia ambang optimal: $\hat{u}$
+        \item Parameter model: $\{\hat{B}(\hat{u}), \hat{C}(\hat{u}), \hat{\gamma}(\hat{u})\}$
+        \item Parameter derived: $\hat{\theta} = \frac{1}{\hat{B}(\hat{u})\hat{C}(\hat{u})^{\hat{u}}}$
+        \item Jika $\hat{\gamma} < 0$, hitung \textit{highest attained age}: $\hat{\omega} = \hat{u} + \frac{\hat{\theta}}{|\hat{\gamma}|}$
     \end{itemize}
 \end{enumerate}
 
@@ -521,7 +521,7 @@ Beberapa pertimbangan praktis dalam implementasi estimasi model STLT:
     
     \item \textbf{Reparameterisasi}: Untuk meningkatkan stabilitas numerik, gunakan transformasi logaritmik: $\alpha = \ln B$, $\delta = \ln(\ln C)$ sehingga tidak perlu constraint $B > 0$ dan $C > 1$.
     
-    \item \textbf{Validasi konvergensi}: Periksa bahwa algoritma optimisasi mencapai konvergensi (berdasarkan kriteria gradien atau perubahan fungsi objektif) untuk setiap kandidat $N$.
+    \item \textbf{Validasi konvergensi}: Periksa bahwa algoritma optimisasi mencapai konvergensi (berdasarkan kriteria gradien atau perubahan fungsi objektif) untuk setiap kandidat $u$.
     
     \item \textbf{Validitas parameter}: Pastikan estimator memenuhi kondisi regularitas, khususnya $\hat{\gamma} < 0$ untuk konsistensi dengan batas usia maksimum.
 \end{itemize}
@@ -548,7 +548,7 @@ Tabel \ref{tab:stlt_params_female} dan Tabel \ref{tab:stlt_params_male} menyajik
 \label{tab:stlt_params_female}
 \begin{tabular}{ccccccc}
 \hline
-Kohor & $\hat{B}$ & $\hat{C}$ & $\hat{\theta}$ & $\hat{\gamma}$ & $\hat{\omega}$ & $\hat{N}$ \\
+Kohor & $\hat{B}$ & $\hat{C}$ & $\hat{\theta}$ & $\hat{\gamma}$ & $\hat{\omega}$ & $\hat{u}$ \\
 \hline
 1893 & 0.000031 & 1.1013 & 2.82 & $-0.159$ & 114.74 & 97 \\
 1894 & 0.000029 & 1.1019 & 2.58 & $-0.160$ & 114.13 & 98 \\
@@ -569,7 +569,7 @@ Kohor & $\hat{B}$ & $\hat{C}$ & $\hat{\theta}$ & $\hat{\gamma}$ & $\hat{\omega}$
 \label{tab:stlt_params_male}
 \begin{tabular}{ccccccc}
 \hline
-Kohor & $\hat{B}$ & $\hat{C}$ & $\hat{\theta}$ & $\hat{\gamma}$ & $\hat{\omega}$ & $\hat{N}$ \\
+Kohor & $\hat{B}$ & $\hat{C}$ & $\hat{\theta}$ & $\hat{\gamma}$ & $\hat{\omega}$ & $\hat{u}$ \\
 \hline
 1893 & 0.000071 & 1.0945 & 4.55 & $-0.221$ & 109.55 & 89 \\
 1894 & 0.000078 & 1.0934 & 3.78 & $-0.195$ & 110.42 & 91 \\
@@ -593,7 +593,7 @@ Dari tabel tersebut, beberapa pola yang dapat diidentifikasi adalah:
 
 \item \textbf{Parameter $C$}: Untuk perempuan, $\hat{C}$ menunjukkan tren meningkat dari 1.1013 (kohor 1893) menjadi 1.1093 (kohor 1901). Untuk laki-laki, tren berlawanan diamati: $\hat{C}$ menurun dari 1.0945 menjadi 1.0878. Namun, variasi relatif parameter $C$ jauh lebih kecil dibandingkan variasi parameter $B$. Secara keseluruhan, perubahan $C$ kurang dari 1\%, sementara perubahan $B$ mencapai lebih dari 50\%.
 
-\item \textbf{Parameter $\gamma$, $\theta$, dan $N$}: Tidak menunjukkan pola temporal yang konsisten atau tren yang jelas untuk kedua jenis kelamin. Nilai-nilai parameter ini berfluktuasi tanpa arah yang sistematis antar kohor. Temuan ini konsisten dengan hasil Einmahl et al. (2019) pada data yang sama.
+\item \textbf{Parameter $\gamma$, $\theta$, dan $u$}: Tidak menunjukkan pola temporal yang konsisten atau tren yang jelas untuk kedua jenis kelamin. Nilai-nilai parameter ini berfluktuasi tanpa arah yang sistematis antar kohor. Temuan ini konsisten dengan hasil Einmahl et al. (2019) pada data yang sama.
 \end{enumerate}
 
 Berdasarkan observasi empiris di atas, Huang memutuskan untuk memodelkan $\log(B)$ sebagai fungsi linear dari waktu. Hal ini juga konsisten dengan penelitian yang dilakukan oleh Cairns et al. pada tahun 2006. Cairns et al. (2006) dalam model CBD (\textit{Cairns-Blake-Dowd}) juga memodelkan komponen tingkat mortalitas sebagai \textit{random walk with drift}, yang secara konseptual serupa dengan spesifikasi $B_i = \exp(a + bi)$.
@@ -607,7 +607,7 @@ Fungsi likelihood untuk model DSTLT dibangun dengan menggabungkan likelihood dar
 Untuk kohor $i$ dengan parameter dinamis $B_i$ dan $C_i$, likelihood memiliki bentuk yang analog dengan STLT, namun dengan parameter yang bergantung pada $i$:
 
 \begin{equation}
-L_i(a, b, \theta, \gamma; N) = \prod_{x=x_{\min}}^{N-1} \left(\frac{S_i(x) - S_i(x+1)}{S_i(x_{\min})}\right)^{d_{x,i}} \times \prod_{x=N}^{\tau_i-1} \left(\frac{S_i(x) - S_i(x+1)}{S_i(x_{\min})}\right)^{d_{x,i}} \times \left(\frac{S_i(\tau_i)}{S_i(x_{\min})}\right)^{l_{\tau_i,i}}
+L_i(a, b, \theta, \gamma; u) = \prod_{x=x_{\min}}^{N-1} \left(\frac{S_i(x) - S_i(x+1)}{S_i(x_{\min})}\right)^{d_{x,i}} \times \prod_{x=u}^{\tau_i-1} \left(\frac{S_i(x) - S_i(x+1)}{S_i(x_{\min})}\right)^{d_{x,i}} \times \left(\frac{S_i(\tau_i)}{S_i(x_{\min})}\right)^{l_{\tau_i,i}}
 \label{eq:dstlt_likelihood_single}
 \end{equation}
 
@@ -634,9 +634,9 @@ S_i(x) = \exp\left(\frac{N \text{exp}(a+bi)}{\ln\theta +a+bi} \cdot \theta^{-x/N
 \label{eq:dstlt_survival_gompertz_explicit}
 \end{equation}
 
-Untuk $x > N$ (bagian GPD):
+Untuk $x > u$ (bagian GPD):
 \begin{equation}
-S_i(x) = S_i(N) \cdot \left(1 + \gamma\frac{x-N}{\theta}\right)^{-1/\gamma}, \quad \gamma \neq 0
+S_i(x) = S_i(u) \cdot \left(1 + \gamma\frac{x-u}{\theta}\right)^{-1/\gamma}, \quad \gamma \neq 0
 \label{eq:dstlt_survival_gpd}
 \end{equation}
 
@@ -645,7 +645,7 @@ S_i(x) = S_i(N) \cdot \left(1 + \gamma\frac{x-N}{\theta}\right)^{-1/\gamma}, \qu
 Dengan asumsi bahwa kohor-kohor dalam training set independen (yaitu, tidak ada korelasi residual antar kohor), joint likelihood adalah produk dari likelihood individu:
 
 \begin{equation}
-L(a, b, \theta, \gamma; N) = \prod_{i=1}^{r} L_i(a, b, \theta, \gamma; N)
+L(a, b, \theta, \gamma; u) = \prod_{i=1}^{r} L_i(a, b, \theta, \gamma; u)
 \label{eq:dstlt_joint_likelihood}
 \end{equation}
 
@@ -653,16 +653,16 @@ dimana $r$ adalah jumlah kohor dalam training set.
 
 Dalam bentuk log-likelihood:
 \begin{equation}
-\ell(a, b, \theta, \gamma; N) = \sum_{i=1}^{r} \ell_i(a, b, \theta, \gamma; N)
+\ell(a, b, \theta, \gamma; u) = \sum_{i=1}^{r} \ell_i(a, b, \theta, \gamma; u)
 \label{eq:dstlt_joint_loglikelihood}
 \end{equation}
 
 \begin{align}
-\ell(a, b, \theta, \gamma; N) = \sum_{i=1}^{r} \Bigg[ &\sum_{x=x_{\min}}^{N-1} d_{x,i} \ln\big(S_i(x) - S_i(x+1)\big) \nonumber \\
-&+ \sum_{x=N}^{\tau_i-1} d_{x,i} \ln\big(S_i(x) - S_i(x+1)\big) \nonumber \\
+\ell(a, b, \theta, \gamma; u) = \sum_{i=1}^{r} \Bigg[ &\sum_{x=x_{\min}}^{N-1} d_{x,i} \ln\big(S_i(x) - S_i(x+1)\big) \nonumber \\
+&+ \sum_{x=u}^{\tau_i-1} d_{x,i} \ln\big(S_i(x) - S_i(x+1)\big) \nonumber \\
 &+ l_{\tau_i,i} \ln S_i(\tau_i) - l_{x_{\min},i} \ln S_i(x_{\min}) \Bigg]
 \label{eq:dstlt_loglik_expanded}
 \end{align}
 
-dimana $S_i(x)$ diberikan oleh persamaan \eqref{eq:dstlt_survival_gompertz_explicit} untuk $x \leq N$ dan persamaan \eqref{eq:dstlt_survival_gpd} untuk $x > N$.
+dimana $S_i(x)$ diberikan oleh persamaan \eqref{eq:dstlt_survival_gompertz_explicit} untuk $x \leq N$ dan persamaan \eqref{eq:dstlt_survival_gpd} untuk $x > u$.
 

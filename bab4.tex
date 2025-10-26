@@ -63,25 +63,25 @@ Untuk menangani kedua jenis sensor ini, fungsi \textit{likelihood} yang digunaka
 
 \section{Estimasi Parameter Model STLT}
 
-Bagian ini menyajikan hasil estimasi parameter model \textit{Smooth Threshold Life Table} (STLT) untuk berbagai kohor dari kedua negara yang dianalisis. Estimasi dilakukan menggunakan metode \textit{Maximum Likelihood Estimation} (MLE) sebagaimana telah dijelaskan pada Sub-bab 3.2.4. Proses estimasi mencakup penentuan parameter Gompertz ($B$, $C$), parameter GPD ($\gamma$), serta pemilihan usia ambang optimal ($N$), dengan parameter skala GPD ($\theta$) ditentukan secara implisit melalui \textit{smoothing constraint} $\theta = 1/(BC^N)$.
+Bagian ini menyajikan hasil estimasi parameter model \textit{Smooth Threshold Life Table} (STLT) untuk berbagai kohor dari kedua negara yang dianalisis. Estimasi dilakukan menggunakan metode \textit{Maximum Likelihood Estimation} (MLE) sebagaimana telah dijelaskan pada Sub-bab 3.2.4. Proses estimasi mencakup penentuan parameter Gompertz ($B$, $C$), parameter GPD ($\gamma$), serta pemilihan usia ambang optimal ($u$), dengan parameter skala GPD ($\theta$) ditentukan secara implisit melalui \textit{smoothing constraint} $\theta = 1/(BC^u)$.
 
 % --------------------------------------------
 \subsection{Prosedur Estimasi}
 
-Untuk setiap kohor, estimasi parameter model STLT dilakukan melalui algoritma optimisasi numerik yang memaksimalkan fungsi log-\textit{likelihood} yang telah diturunkan pada Persamaan (XX) di Bab 3. Mengingat kompleksitas fungsi \textit{likelihood} dan adanya \textit{constraint} antar parameter, digunakan pendekatan \textit{profile likelihood} untuk usia ambang $N$.
+Untuk setiap kohor, estimasi parameter model STLT dilakukan melalui algoritma optimisasi numerik yang memaksimalkan fungsi log-\textit{likelihood} yang telah diturunkan pada Persamaan (XX) di Bab 3. Mengingat kompleksitas fungsi \textit{likelihood} dan adanya \textit{constraint} antar parameter, digunakan pendekatan \textit{profile likelihood} untuk usia ambang $u$.
 
 Secara spesifik, prosedur estimasi dilaksanakan sebagai berikut:
 
 \begin{enumerate}
-    \item \textbf{Pencarian batas untuk Usia Ambang}: Untuk setiap nilai kandidat usia ambang $N$ dalam rentang $[85, 110]$ dengan interval 1 tahun, dilakukan optimisasi parameter $B$, $C$, dan $\gamma$ menggunakan metode \textit{Nelder-Mead simplex}.
+    \item \textbf{Pencarian batas untuk Usia Ambang}: Untuk setiap nilai kandidat usia ambang $u$ dalam rentang $[85, 110]$ dengan interval 1 tahun, dilakukan optimisasi parameter $B$, $C$, dan $\gamma$ menggunakan metode \textit{Nelder-Mead simplex}.
     
     \item \textbf{Inisialisasi Parameter}: Nilai awal parameter untuk optimisasi ditentukan berdasarkan estimasi kasar dari data empiris. Parameter $B$ diinisialisasi menggunakan regresi linear sederhana pada $\log(q_x)$ untuk rentang usia 65--85 tahun. Parameter $C$ diinisialisasi mendekati nilai 1.1 yang merupakan nilai tipikal dalam literatur mortalitas. Parameter $\gamma$ diinisialisasi pada nilai $-0.2$, konsisten dengan temuan empiris \textit{mortality deceleration} pada usia lanjut ekstrem.
     
-    \item \textbf{Optimisasi Numerik}: Untuk setiap $N$ tetap, algoritma optimisasi memaksimalkan log-\textit{likelihood} terhadap parameter bebas $(B, C, \gamma)$ dengan mempertimbangkan \textit{constraint} $\theta = 1/(BC^N)$. Konvergensi dinyatakan tercapai ketika perubahan relatif dalam nilai \textit{likelihood} antara iterasi berturut-turut kurang dari $10^{-8}$.
+    \item \textbf{Optimisasi Numerik}: Untuk setiap $u$ tetap, algoritma optimisasi memaksimalkan log-\textit{likelihood} terhadap parameter bebas $(B, C, \gamma)$ dengan mempertimbangkan \textit{constraint} $\theta = 1/(BC^u)$. Konvergensi dinyatakan tercapai ketika perubahan relatif dalam nilai \textit{likelihood} antara iterasi berturut-turut kurang dari $10^{-8}$.
     
-    \item \textbf{Pemilihan Usia Ambang Optimal}: Setelah mendapatkan estimasi parameter untuk semua nilai $N$ kandidat, usia ambang optimal dipilih sebagai nilai $\hat{N}$ yang menghasilkan nilai log-\textit{likelihood} maksimum. Estimasi parameter final model STLT adalah $(\hat{B}, \hat{C}, \hat{\gamma}, \hat{N})$ yang bersesuaian dengan $\hat{N}$ optimal ini.
+    \item \textbf{Pemilihan Usia Ambang Optimal}: Setelah mendapatkan estimasi parameter untuk semua nilai $u$ kandidat, usia ambang optimal dipilih sebagai nilai $\hat{u}$ yang menghasilkan nilai log-\textit{likelihood} maksimum. Estimasi parameter final model STLT adalah $(\hat{B}, \hat{C}, \hat{\gamma}, \hat{u})$ yang bersesuaian dengan $\hat{u}$ optimal ini.
     
-    \item \textbf{Perhitungan \textit{Highest Attained Age}}: Untuk kasus $\hat{\gamma} < 0$, batas atas distribusi usia (\textit{highest attained age}, $\omega$) dihitung menggunakan formula $\omega = \hat{N} + \hat{\theta}/|\hat{\gamma}|$, dengan $\hat{\theta} = 1/(\hat{B}\hat{C}^{\hat{N}})$.
+    \item \textbf{Perhitungan \textit{Highest Attained Age}}: Untuk kasus $\hat{\gamma} < 0$, batas atas distribusi usia (\textit{highest attained age}, $\omega$) dihitung menggunakan formula $\omega = \hat{u} + \hat{\theta}/|\hat{\gamma}|$, dengan $\hat{\theta} = 1/(\hat{B}\hat{C}^{\hat{u}})$.
 \end{enumerate}
 
 Seluruh prosedur estimasi diimplementasikan menggunakan bahasa pemrograman R versi 4.3.1, dengan memanfaatkan fungsi \texttt{optim()} untuk optimisasi numerik.
@@ -98,7 +98,7 @@ Tabel \ref{tab:stlt_params_selected_cohorts} menyajikan hasil estimasi parameter
 \small
 \begin{tabular}{ccccccc}
 \hline
-\textbf{Negara} & \textbf{Kohor} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\hat{C}}$ & $\boldsymbol{\hat{\gamma}}$ & $\boldsymbol{\hat{N}}$ & $\boldsymbol{\hat{\omega}}$ \\
+\textbf{Negara} & \textbf{Kohor} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\hat{C}}$ & $\boldsymbol{\hat{\gamma}}$ & $\boldsymbol{\hat{u}}$ & $\boldsymbol{\hat{\omega}}$ \\
 \hline
 \multirow{4}{*}{\textbf{Jepang}} 
 & 1893 & $2.98 \times 10^{-5}$ & 1.1024 & $-0.2425$ & 93 & 109.0 \\
@@ -115,7 +115,7 @@ Tabel \ref{tab:stlt_params_selected_cohorts} menyajikan hasil estimasi parameter
 \end{tabular}
 \begin{tablenotes}
 \small
-\item \textit{Catatan}: $\hat{\omega}$ merepresentasikan \textit{highest attained age} yang dihitung sebagai $\hat{N} + \hat{\theta}/|\hat{\gamma}|$ untuk $\hat{\gamma} < 0$. Untuk kohor Jepang 1899 dengan $\hat{\gamma} > 0$, nilai $\hat{\omega}$ menunjukkan estimasi berdasarkan persentil tinggi dari distribusi GPD.
+\item \textit{Catatan}: $\hat{\omega}$ merepresentasikan \textit{highest attained age} yang dihitung sebagai $\hat{u} + \hat{\theta}/|\hat{\gamma}|$ untuk $\hat{\gamma} < 0$. Untuk kohor Jepang 1899 dengan $\hat{\gamma} > 0$, nilai $\hat{\omega}$ menunjukkan estimasi berdasarkan persentil tinggi dari distribusi GPD.
 \end{tablenotes}
 \end{table}
 
@@ -132,7 +132,7 @@ Untuk mengevaluasi dampak penambahan \textit{smoothing constraint} pada model TL
 \small
 \begin{tabular}{clcccccc}
 \hline
-\textbf{Negara} & \textbf{Model} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\hat{C}}$ & $\boldsymbol{\hat{\gamma}}$ & $\boldsymbol{\hat{N}}$ & $\boldsymbol{\hat{\omega}}$ & \textbf{Log-Lik} \\
+\textbf{Negara} & \textbf{Model} & $\boldsymbol{\hat{B}}$ & $\boldsymbol{\hat{C}}$ & $\boldsymbol{\hat{\gamma}}$ & $\boldsymbol{\hat{u}}$ & $\boldsymbol{\hat{\omega}}$ & \textbf{Log-Lik} \\
 \hline
 \multirow{2}{*}{\textbf{Belanda 1901}} 
 & STLT & $1.54 \times 10^{-5}$ & 1.1090 & $-0.1579$ & 98 & 114.2 & $-2847.3$ \\
@@ -154,9 +154,9 @@ Beberapa observasi penting dari perbandingan ini:
 \begin{enumerate}
     \item \textbf{Kesesuaian Model}: Model STLT secara konsisten menghasilkan nilai log-\textit{likelihood} yang lebih tinggi dibandingkan model TLT, mengindikasikan kesesuaian yang lebih baik terhadap data observasi. Untuk Belanda 1901, perbedaan log-\textit{likelihood} adalah $4.5$ ($-2847.3$ vs $-2851.8$), sementara untuk Jepang 1962 perbedaannya adalah $18.3$ ($-3124.6$ vs $-3142.9$). Perbaikan ini menunjukkan bahwa \textit{smoothing constraint} memang meningkatkan kemampuan model dalam menangkap pola mortalitas.
     
-    \item \textbf{Perbedaan Estimasi Parameter}: Terdapat perbedaan substansial dalam estimasi parameter antara STLT dan TLT. Secara khusus, nilai $\hat{B}$ untuk STLT jauh lebih tinggi (sekitar 7--11 kali lipat) dibandingkan TLT. Sebaliknya, nilai $\hat{C}$ untuk STLT cenderung lebih rendah. Perbedaan ini mencerminkan redistribusi peran parameter dalam menjelaskan pola mortalitas ketika \textit{constraint} $\theta = 1/(BC^N)$ dikenakan.
+    \item \textbf{Perbedaan Estimasi Parameter}: Terdapat perbedaan substansial dalam estimasi parameter antara STLT dan TLT. Secara khusus, nilai $\hat{B}$ untuk STLT jauh lebih tinggi (sekitar 7--11 kali lipat) dibandingkan TLT. Sebaliknya, nilai $\hat{C}$ untuk STLT cenderung lebih rendah. Perbedaan ini mencerminkan redistribusi peran parameter dalam menjelaskan pola mortalitas ketika \textit{constraint} $\theta = 1/(BC^u)$ dikenakan.
     
-    \item \textbf{Usia Ambang Optimal}: Model STLT cenderung memilih usia ambang $\hat{N}$ yang lebih rendah (89--98 tahun) dibandingkan TLT yang umumnya konvergen pada $N = 100$ tahun. Hal ini mengindikasikan bahwa dengan adanya \textit{smoothing constraint}, transisi dari Gompertz ke GPD dapat terjadi pada usia yang lebih muda sambil tetap mempertahankan kontinuitas fungsi \textit{hazard}.
+    \item \textbf{Usia Ambang Optimal}: Model STLT cenderung memilih usia ambang $\hat{u}$ yang lebih rendah (89--98 tahun) dibandingkan TLT yang umumnya konvergen pada $u = 100$ tahun. Hal ini mengindikasikan bahwa dengan adanya \textit{smoothing constraint}, transisi dari Gompertz ke GPD dapat terjadi pada usia yang lebih muda sambil tetap mempertahankan kontinuitas fungsi \textit{hazard}.
     
     \item \textbf{Implikasi untuk Fungsi \textit{Hazard}}: Meskipun terdapat perbedaan parameter, kedua model menghasilkan estimasi $\hat{\omega}$ yang relatif sebanding, dengan perbedaan maksimum sekitar 3 tahun. Hal ini menunjukkan bahwa meskipun mekanisme parameterisasi berbeda, kedua model menangkap karakteristik ekor distribusi dengan cara yang serupa.
 \end{enumerate}
@@ -188,7 +188,7 @@ Panel Bawah: Zoom pada transisi di sekitar usia ambang\\
 
 Visualisasi ini mengkonfirmasi bahwa:
 \begin{itemize}
-    \item Model STLT menghasilkan fungsi \textit{hazard} yang kontinu dan mulus pada usia ambang $N$, sesuai dengan desain model.
+    \item Model STLT menghasilkan fungsi \textit{hazard} yang kontinu dan mulus pada usia ambang $u$, sesuai dengan desain model.
     \item Model TLT menunjukkan diskontinuitas (\textit{jump}) yang terlihat jelas pada usia ambang, mencerminkan ketidakkonsistenan antara komponen Gompertz dan GPD.
     \item Kedua model memberikan kesesuaian yang baik terhadap \textit{hazard rate} empiris pada rentang usia dengan data yang memadai (di bawah 105 tahun).
     \item Pada usia lanjut ekstrem (di atas 105 tahun), ketidakpastian estimasi meningkat yang tercermin dari variabilitas tinggi \textit{hazard rate} empiris.
@@ -399,10 +399,10 @@ Peningkatan lemah parameter $C$ memiliki implikasi substantif yang menarik. Para
 
 Fenomena ini konsisten dengan hipotesis bahwa perbaikan mortalitas tidak seragam di seluruh rentang usia. Intervensi medis dan peningkatan standar hidup mungkin lebih efektif dalam menurunkan mortalitas pada usia yang lebih muda (menghasilkan penurunan $B$), sementara proses penuaan biologis fundamental yang mendasari peningkatan mortalitas dengan usia (yang dicerminkan oleh $C$) tetap relatif stabil atau bahkan sedikit meningkat.
 
-Namun, mengingat magnitude perubahan yang kecil dan variabilitas yang lebih tinggi, parameter $C$ bukan kandidat utama untuk dinamisasi dalam model DSTLT. Sebagai gantinya, model DSTLT akan memodelkan $C_i$ secara implisit melalui hubungannya dengan $B_i$ melalui \textit{smoothing constraint} $\theta = 1/(B_i C_i^N)$.
+Namun, mengingat magnitude perubahan yang kecil dan variabilitas yang lebih tinggi, parameter $C$ bukan kandidat utama untuk dinamisasi dalam model DSTLT. Sebagai gantinya, model DSTLT akan memodelkan $C_i$ secara implisit melalui hubungannya dengan $B_i$ melalui \textit{smoothing constraint} $\theta = 1/(B_i C_i^u)$.
 
 % --------------------------------------------
-\subsection{Tren Parameter GPD ($\gamma$, $N$, $\omega$)}
+\subsection{Tren Parameter GPD ($\gamma$, $u$, $\omega$)}
 
 \paragraph{Parameter Bentuk GPD ($\gamma$)}
 Analisis evolusi parameter $\hat{\gamma}$ mengungkapkan pola yang kompleks dan tidak sistematis. Untuk Belanda, $\hat{\gamma}$ bervariasi dari $-0.074$ (kohor 1893) hingga $+0.052$ (kohor 1897) dan $-0.448$ (kohor 1902), tanpa tren temporal yang jelas. Untuk Jepang, variabilitas serupa diamati, dengan $\hat{\gamma}$ berkisar dari $-0.242$ hingga $+0.230$.
@@ -418,10 +418,10 @@ Variabilitas tinggi dan ketiadaan pola temporal sistematis untuk parameter $\gam
 
 Ketiadaan pola temporal yang jelas menjadikan parameter $\gamma$ tidak sesuai untuk dinamisasi, dan model DSTLT akan memperlakukannya sebagai konstan antar kohor.
 
-\paragraph{Usia Ambang ($N$)}
-Usia ambang optimal $\hat{N}$ juga tidak menunjukkan tren temporal yang sistematis. Untuk Belanda, $\hat{N}$ bervariasi antara 95 hingga 108 tahun tanpa pola monotonik yang jelas. Untuk Jepang, variabilitas serupa diamati.
+\paragraph{Usia Ambang ($u$)}
+Usia ambang optimal $\hat{u}$ juga tidak menunjukkan tren temporal yang sistematis. Untuk Belanda, $\hat{u}$ bervariasi antara 95 hingga 108 tahun tanpa pola monotonik yang jelas. Untuk Jepang, variabilitas serupa diamati.
 
-Variabilitas $\hat{N}$ mencerminkan trade-off optimisasi antara kompleksitas model dan kesesuaian data untuk setiap kohor spesifik, dan dipengaruhi oleh karakteristik distribusi usia kematian yang spesifik kohor. Mengingat ketiadaan pola temporal dan pertimbangan parsimoni model, DSTLT akan menggunakan usia ambang konstan yang optimal secara \textit{pooled} untuk semua kohor.
+Variabilitas $\hat{u}$ mencerminkan trade-off optimisasi antara kompleksitas model dan kesesuaian data untuk setiap kohor spesifik, dan dipengaruhi oleh karakteristik distribusi usia kematian yang spesifik kohor. Mengingat ketiadaan pola temporal dan pertimbangan parsimoni model, DSTLT akan menggunakan usia ambang konstan yang optimal secara \textit{pooled} untuk semua kohor.
 
 \paragraph{\textit{Highest Attained Age} ($\omega$)}
 Estimasi $\hat{\omega}$ (untuk kasus $\hat{\gamma} < 0$) juga menunjukkan variabilitas substansial tanpa tren yang jelas. Untuk Belanda, $\hat{\omega}$ berkisar dari 76.6 hingga 130.6 tahun, sementara untuk Jepang dari 97.6 hingga 135.6 tahun.
@@ -438,11 +438,11 @@ Gambar \ref{fig:parameter_evolution} menyajikan visualisasi evolusi seluruh para
 % Placeholder untuk grafik - ganti dengan \includegraphics setelah gambar tersedia
 \fbox{\parbox{0.8\textwidth}{\centering
 \vspace{5cm}
-[Grafik Panel 4x2 menunjukkan evolusi parameter $B$, $C$, $\gamma$, dan $N$ untuk Belanda dan Jepang]\\
+[Grafik Panel 4x2 menunjukkan evolusi parameter $B$, $C$, $\gamma$, dan $u$ untuk Belanda dan Jepang]\\
 Panel 1: $\ln(B)$ vs Kohor dengan fitted line\\
 Panel 2: $C$ vs Kohor\\
 Panel 3: $\gamma$ vs Kohor\\
-Panel 4: $N$ vs Kohor\\
+Panel 4: $u$ vs Kohor\\
 \vspace{5cm}
 }}
 \caption{Evolusi Temporal Parameter Model STLT Antar Kohor}
@@ -457,7 +457,7 @@ Visualisasi ini mengkonfirmasi observasi kuantitatif:
 \begin{itemize}
     \item Tren menurun yang jelas dan hampir linear untuk $\ln(B)$, dengan variabilitas yang relatif kecil di sekitar garis tren
     \item Tren meningkat yang lebih lemah untuk $C$, dengan fluktuasi yang lebih besar
-    \item Tidak ada pola temporal yang jelas untuk $\gamma$ dan $N$, dengan variabilitas substansial antar kohor
+    \item Tidak ada pola temporal yang jelas untuk $\gamma$ dan $u$, dengan variabilitas substansial antar kohor
 \end{itemize}
 
 
@@ -468,7 +468,7 @@ Model DSTLT memperluas STLT dengan memodelkan parameter $B$ sebagai fungsi ekspo
 % --------------------------------------------
 \subsection{Estimasi Parameter DSTLT}
 
-Estimasi parameter dilakukan dengan memaksimalkan fungsi \textit{likelihood} gabungan yang mencakup data dari kohor \textit{training} (1893--1901). Parameter yang diestimasi adalah $a$, $b$ (menentukan dinamika $B_i$), $\theta$, $\gamma$, dan $N$ (konstan antar kohor). Tabel \ref{tab:dstlt_parameters} menyajikan hasil estimasi untuk kedua negara.
+Estimasi parameter dilakukan dengan memaksimalkan fungsi \textit{likelihood} gabungan yang mencakup data dari kohor \textit{training} (1893--1901). Parameter yang diestimasi adalah $a$, $b$ (menentukan dinamika $B_i$), $\theta$, $\gamma$, dan $u$ (konstan antar kohor). Tabel \ref{tab:dstlt_parameters} menyajikan hasil estimasi untuk kedua negara.
 
 \begin{table}[htbp]
 \centering
@@ -482,7 +482,7 @@ $\hat{a}$ & $-10.54$ & $-9.920$ \\
 $\hat{b}$ & $-0.158$ & $-0.085$ \\
 $\hat{\theta}$ & 1.677 & 3.455 \\
 $\hat{\gamma}$ & $-0.168$ & $-0.162$ \\
-$\hat{N}$ & 100 & 90 \\
+$\hat{u}$ & 100 & 90 \\
 $\hat{\omega}$ & 110.0 & 111.4 \\
 \hline
 \end{tabular}
