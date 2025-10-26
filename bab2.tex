@@ -110,7 +110,7 @@ Sebagai catatan, dalam penelitian ini, metode Coale-Kisker tidak diestimasi meng
 
 \section{Extreme Value Theory}
 
-\textit{Extreme Value Theory} (EVT) merupakan cabang statistika yang secara khusus menganalisis perilaku nilai-nilai ekstrem dari suatu distribusi probabilitas. Dalam konteks mortalitas, EVT menyediakan kerangka teoretis yang kuat untuk memodelkan probabilitas kejadian langka seperti kematian pada usia lanjut ekstrem dan melakukan ekstrapolasi di luar rentang data observasi secara lebih terjustifikasi secara statistik \citep{coles2001introduction, gbari2017extreme}. Keterbatasan data empiris pada usia sangat lanjut, yang ditandai dengan jumlah observasi yang sedikit dan volatilitas tinggi, menjadikan EVT sebagai alat yang tepat karena dirancang untuk menangani kejadian ekstrem dengan fondasi teoretis yang solid.
+Model-model mortalitas statis yang telah dibahas—Gompertz-Makeham, Heligman-Pollard, dan Coale-Kisker—memiliki keterbatasan mendasar dalam memodelkan mortalitas pada usia lanjut ekstrem (di atas 85-90 tahun). Keterbatasan data empiris pada rentang usia ini, ditandai dengan volatilitas tinggi dan jumlah observasi terbatas, membuat ekstrapolasi berbasis model parametrik konvensional menjadi tidak reliabel. \textit{Extreme Value Theory} (EVT) menawarkan alternatif yang lebih prinsipiil: sebagai cabang statistika yang secara khusus menganalisis perilaku nilai ekstrem dari distribusi probabilitas, EVT menyediakan justifikasi teoretis yang kuat untuk memodelkan kejadian langka pada ekor distribusi dan melakukan ekstrapolasi di luar rentang data observasi \citep{coles2001introduction, embrechts1997modelling, gbari2017extreme}.
 
 \subsection{Konsep Dasar Extreme Value Theory}
 
@@ -202,7 +202,7 @@ Aarssen dan de Haan pada tahun 1994 menetapkan bahwa untuk $\xi < 0$, sehingga b
 \end{equation}
 Para peneliti ini menyebut $\alpha = \alpha(\xi)$ sebagai \textit{perseverance parameter} dan memberikan penjelasan sebagai berikut \citep{aarssen1994domains}. Perhatikan seorang individu yang masih hidup pada usia lanjut $x$. Rasio $(T - x)/(\omega - x)$ merepresentasikan persentase sisa masa hidup aktual $T - x$ terhadap sisa masa hidup maksimum $\omega - x$. Persentase ini menjadi stabil, secara rata-rata, ketika $x \to \omega$ dan konvergen ke $\alpha$, yang dengan demikian muncul sebagai persentase ekspektasi dari sisa masa hidup maksimum yang mungkin, yang secara efektif digunakan oleh individu tersebut.
 
-Teorema Pickands-Balkema-de Haan memberikan justifikasi teoretis untuk pendekatan POT dalam pemodelan mortalitas usia lanjut. Dalam praktik, untuk menerapkan hasil ini, perlu ditentukan usia ambang $u$ (atau $x^*$) sedemikian sehingga aproksimasi GPD cukup akurat untuk $x \geq u$. Pemilihan usia ambang yang tepat merupakan aspek krusial dalam implementasi model berbasis EVT, dan akan dibahas lebih lanjut dalam konteks konstruksi model \textit{Threshold Life Table} pada sub-bab berikutnya.
+Teorema Pickands-Balkema-de Haan memberikan justifikasi teoretis untuk pendekatan POT dalam pemodelan mortalitas usia lanjut. Dalam praktik, untuk menerapkan hasil ini, perlu ditentukan usia ambang $u$ (atau $x^*$) sedemikian sehingga aproksimasi GPD cukup akurat untuk $x \geq u$. Pemilihan usia ambang yang tepat merupakan aspek krusial dalam implementasi model berbasis EVT, dan akan dibahas lebih lanjut dalam konteks konstruksi model \textit{Threshold Life Table} di Bab 3.
 
 \section{Model Mortalitas Dinamis}
 
@@ -249,46 +249,46 @@ Parameter temporal memiliki interpretasi sebagai berikut:
 
 \subsection{Model Cairns-Blake-Dowd (CBD)}
 
-Model mortalitas dinamis menangkap perubahan pola mortalitas dari waktu ke waktu, yang penting untuk melakukan proyeksi mortalitas masa depan. Berbeda dengan model statis yang mengasumsikan parameter tetap, model dinamis memodelkan parameter sebagai fungsi waktu atau kohor. Salah satu contoh model mortalitas dinamis adalah Model Cairns-Blake-Dowd (CBD).
+Model-model mortalitas yang telah dibahas sebelumnya—baik model statis (Gompertz-Makeham, Heligman-Pollard, Coale-Kisker) maupun model berbasis EVT dalam konteks statis—menangani struktur mortalitas pada satu titik waktu atau untuk satu kohor tertentu. Namun, fenomena perbaikan mortalitas (\textit{mortality improvement}) yang teramati konsisten di banyak negara maju memerlukan kerangka pemodelan yang dapat menangkap dinamika temporal dan melakukan proyeksi masa depan. Model mortalitas dinamis mengatasi keterbatasan ini dengan memodelkan parameter sebagai fungsi waktu atau kohor, memungkinkan proyeksi mortalitas jangka panjang yang esensial untuk manajemen risiko longevitas.
 
-Model Cairns-Blake-Dowd (CBD) yang diperkenalkan oleh \citet{cairns2006two} dirancang khusus untuk memodelkan mortalitas pada usia lanjut. Model ini menggunakan struktur yang lebih sederhana dibandingkan Lee-Carter namun tetap efektif untuk aplikasi pada rentang usia terbatas.
+Model Cairns-Blake-Dowd (CBD), yang diperkenalkan oleh \citet{cairns2006two}, merupakan salah satu model dinamis paling berpengaruh dalam literatur aktuaria modern. Model ini dirancang khusus untuk memodelkan mortalitas pada usia lanjut dengan struktur yang lebih parsimoni dibandingkan model Lee-Carter, namun tetap efektif untuk aplikasi pada rentang usia terbatas, khususnya untuk valuasi kewajiban dana pensiun dan produk anuitas.
 
-Model CBD memodelkan logit dari probabilitas kematian satu tahun $q_{x,t}$ sebagai fungsi linear dari usia:
+\subsection{Formulasi Model CBD}
+
+Model CBD memodelkan logit dari probabilitas kematian satu tahun $q_{x,t}$ sebagai fungsi bilinear dari parameter temporal:
 \begin{equation}
 \text{logit}(q_{x,t}) = \ln\left(\frac{q_{x,t}}{1-q_{x,t}}\right) = \kappa_t^{(1)} + \kappa_t^{(2)} (x - \bar{x}),
 \label{eq:cbd_basic}
 \end{equation}
-dimana:
-\begin{itemize}
-    \item $x$ adalah usia (umumnya untuk rentang usia lanjut, misalnya 60--89 tahun)
-    \item $t$ adalah tahun kalender atau indeks waktu
-    \item $\bar{x}$ adalah usia rata-rata dalam rentang yang dianalisis (untuk centering)
-    \item $\kappa_t^{(1)}$ adalah parameter temporal yang mengatur tingkat mortalitas keseluruhan pada tahun $t$
-    \item $\kappa_t^{(2)}$ adalah parameter temporal yang mengatur slope atau gradien mortalitas terhadap usia pada tahun $t$
-\end{itemize}
-
-Dari persamaan \eqref{eq:cbd_basic}, probabilitas kematian dapat diperoleh melalui transformasi invers:
+dimana $x$ adalah usia (umumnya untuk rentang usia lanjut 60--89 tahun), $t$ adalah tahun kalender, $\bar{x}$ adalah usia rata-rata untuk \textit{centering}, $\kappa_t^{(1)}$ adalah parameter tingkat mortalitas keseluruhan (\textit{level}), dan $\kappa_t^{(2)}$ adalah parameter gradien mortalitas terhadap usia (\textit{slope}). Probabilitas kematian diperoleh melalui transformasi logistik invers:
 \begin{equation}
 q_{x,t} = \frac{\exp(\kappa_t^{(1)} + \kappa_t^{(2)} (x - \bar{x}))}{1 + \exp(\kappa_t^{(1)} + \kappa_t^{(2)} (x - \bar{x}))}.
 \label{eq:cbd_qx}
 \end{equation}
 
-Parameter temporal $\kappa_t^{(1)}$ dan $\kappa_t^{(2)}$ dimodelkan sebagai proses stokastik. Spesifikasi standar menggunakan \textit{random walk with drift}:
+Interpretasi parameter temporal: penurunan $\kappa_t^{(1)}$ mengindikasikan perbaikan mortalitas secara umum di semua usia, sedangkan perubahan $\kappa_t^{(2)}$ menangkap perubahan struktur usia dari mortalitas—nilai negatif dari $\kappa_t^{(2)}$ yang semakin besar (dalam nilai absolut) mengindikasikan gradien mortalitas yang semakin curam, yaitu percepatan mortalitas seiring bertambahnya usia menjadi lebih tajam.
+
+\subsection{Estimasi dan Forecasting}
+
+Estimasi parameter $\{\kappa_t^{(1)}, \kappa_t^{(2)}\}_{t=1}^T$ untuk periode historis $t = 1, \ldots, T$ dilakukan menggunakan MLE dengan asumsi distribusi Poisson atau Binomial untuk jumlah kematian, tergantung pada struktur data yang tersedia. Untuk identifiability, constraint $\sum_t \kappa_t^{(1)} = 0$ dan $\sum_t \kappa_t^{(2)} = 0$ umumnya digunakan.
+
+Setelah parameter historis diestimasi, proyeksi mortalitas masa depan dilakukan dengan memodelkan dinamika temporal $\kappa_t^{(1)}$ dan $\kappa_t^{(2)}$ menggunakan model deret waktu. Spesifikasi standar menggunakan \textit{random walk with drift} (RWD):
 \begin{align}
 \kappa_t^{(1)} &= \kappa_{t-1}^{(1)} + \mu^{(1)} + \epsilon_t^{(1)}, \label{eq:cbd_rw1} \\
 \kappa_t^{(2)} &= \kappa_{t-1}^{(2)} + \mu^{(2)} + \epsilon_t^{(2)}, \label{eq:cbd_rw2}
 \end{align}
-dimana $\mu^{(1)}$ dan $\mu^{(2)}$ adalah drift parameters, dan $\epsilon_t^{(1)}, \epsilon_t^{(2)}$ adalah error terms yang diasumsikan white noise dengan mean nol.
+dimana $\mu^{(1)}$ dan $\mu^{(2)}$ adalah \textit{drift parameters} yang menangkap tren jangka panjang, dan $\epsilon_t^{(1)}, \epsilon_t^{(2)} \sim \text{N}(0, \sigma^2)$ adalah \textit{white noise innovations}. Parameter drift dan variance diestimasi dari time series parameter historis menggunakan metode \textit{ordinary least squares} (OLS) atau MLE.
 
+Proyeksi $h$-tahun ke depan diperoleh dengan iterasi:
+\begin{align}
+\hat{\kappa}_{T+h}^{(1)} &= \hat{\kappa}_{T+h-1}^{(1)} + \hat{\mu}^{(1)}, \\
+\hat{\kappa}_{T+h}^{(2)} &= \hat{\kappa}_{T+h-1}^{(2)} + \hat{\mu}^{(2)},
+\end{align}
+dan substitusi ke persamaan \eqref{eq:cbd_qx} memberikan proyeksi $\hat{q}_{x,T+h}$. Model RWD mengimplikasikan tren linear dalam parameter temporal, yang sesuai untuk proyeksi jangka menengah (10--30 tahun), meskipun spesifikasi alternatif seperti \textit{vector autoregression} (VAR) atau \textit{ARIMA} dapat digunakan untuk menangkap struktur dependensi yang lebih kompleks.
 
+\subsection{Peran CBD sebagai Benchmark}
 
-Dalam penelitian ini, model CBD digunakan sebagai \textit{benchmark} untuk mengevaluasi kemampuan forecasting model Dynamic Smooth Threshold Life Table (DSTLT). Perbandingan dilakukan pada:
-\begin{enumerate}
-    \item \textbf{In-sample fit}: Kesesuaian model terhadap data historis yang digunakan untuk estimasi
-    \item \textbf{Out-of-sample forecast accuracy}: Akurasi proyeksi mortalitas untuk kohor yang tidak termasuk dalam training set
-\end{enumerate}
-
-Model CBD dipilih sebagai benchmark karena merupakan model standar dalam literatur aktuaria untuk proyeksi mortalitas usia lanjut dan telah banyak digunakan dalam praktik industri asuransi dan dana pensiun \citep{villegas2018comparative}.
+Dalam penelitian ini, model CBD digunakan sebagai \textit{benchmark} untuk mengevaluasi kemampuan forecasting model Dynamic Smooth Threshold Life Table (DSTLT). Perbandingan dilakukan pada dua aspek: (1) \textit{in-sample fit}—kesesuaian model terhadap data historis yang digunakan untuk estimasi, dan (2) \textit{out-of-sample forecast accuracy}—akurasi proyeksi mortalitas untuk kohor yang tidak termasuk dalam \textit{training set}. Model CBD dipilih sebagai benchmark karena merupakan model standar dalam literatur aktuaria untuk proyeksi mortalitas usia lanjut dan telah banyak digunakan dalam praktik industri asuransi dan dana pensiun \citep{villegas2018comparative, cairns2011quantitative}.
 
 \section{Maximum Likelihood Estimation (MLE)}
 
@@ -362,9 +362,35 @@ Untuk data mortalitas dengan rentang usia dari $x_{\min}$ hingga $\tau$, fungsi 
 
 Normalisasi dengan $S(x_{\min})$ memastikan bahwa likelihood dikondisikan pada bertahan hidup hingga usia awal pengamatan, yang konsisten dengan definisi probabilitas kondisional dalam analisis kohor.
 
-Struktur likelihood ini merupakan dasar untuk estimasi parameter dalam model TLT, STLT, dan DSTLT yang akan dibahas pada Bab 3.
+\subsection{Profile Likelihood dan Threshold Selection}
 
+Dalam model mortalitas dengan parameter ambang (\textit{threshold}), seperti model TLT dan STLT, pemilihan usia ambang $u$ merupakan aspek krusial yang mempengaruhi kinerja model secara keseluruhan. Metode \textit{profile likelihood} menyediakan kerangka formal untuk pemilihan parameter diskret seperti $u$ \citep{murphy2000likelihood}.
 
+Misalkan vektor parameter model dapat dipartisi menjadi $\boldsymbol{\theta} = (\boldsymbol{\psi}, u)$, dimana $\boldsymbol{\psi}$ adalah parameter kontinu yang perlu diestimasi dan $u$ adalah parameter diskret (usia ambang) yang dipilih dari himpunan kandidat terbatas $\mathcal{U} = \{u_1, u_2, \ldots, u_K\}$. Fungsi \textit{profile likelihood} untuk $u$ didefinisikan sebagai:
+\begin{equation}
+L_{\text{prof}}(u) = \max_{\boldsymbol{\psi}} L(\boldsymbol{\psi}, u; \mathbf{x}) = L(\hat{\boldsymbol{\psi}}(u), u; \mathbf{x}),
+\label{eq:profile_likelihood}
+\end{equation}
+dimana $\hat{\boldsymbol{\psi}}(u)$ adalah estimator MLE dari $\boldsymbol{\psi}$ yang diperoleh dengan memaksimalkan likelihood untuk nilai $u$ tetap.
+
+Prosedur \textit{profile likelihood} untuk pemilihan threshold dilakukan sebagai berikut:
+\begin{enumerate}
+    \item Untuk setiap kandidat $u \in \mathcal{U}$, estimasi parameter kontinu $\hat{\boldsymbol{\psi}}(u)$ menggunakan MLE dengan $u$ dianggap tetap
+    \item Hitung nilai profile log-likelihood: $\ell_{\text{prof}}(u) = \ell(\hat{\boldsymbol{\psi}}(u), u)$
+    \item Pilih threshold optimal: $\hat{u} = \arg\max_{u \in \mathcal{U}} \ell_{\text{prof}}(u)$
+\end{enumerate}
+
+Pendekatan ini memiliki beberapa keunggulan: (1) secara otomatis menyeimbangkan antara \textit{goodness-of-fit} dan kompleksitas model untuk setiap kandidat $u$, (2) memberikan framework yang konsisten dengan prinsip likelihood, dan (3) memungkinkan perbandingan objektif antar kandidat threshold. Dalam implementasi model STLT dan DSTLT, profile likelihood digunakan untuk memilih usia ambang optimal dari kandidat usia $u \in \{85, 86, \ldots, 110\}$ tahun.
+
+\subsection{Numerical Optimization Methods}
+
+Estimasi parameter model mortalitas sering kali tidak memiliki solusi analitik tertutup, sehingga memerlukan metode optimisasi numerik. Untuk model dengan constraint non-linear seperti STLT, dimana terdapat \textit{smoothing constraint} $\theta = 1/(BC^u)$, metode optimisasi yang robust terhadap permukaan likelihood yang kompleks diperlukan.
+
+\textit{Nelder-Mead simplex method} merupakan algoritma optimisasi bebas-turunan (\textit{derivative-free}) yang banyak digunakan dalam estimasi parameter model mortalitas \citep{nelder1965simplex}. Metode ini bekerja dengan membangun simplex (polytope dengan $n+1$ vertices dalam ruang $n$-dimensi) dan secara iteratif mentransformasi simplex melalui operasi refleksi, ekspansi, kontraksi, dan shrinkage untuk mencari nilai minimum dari fungsi objektif. Dalam konteks MLE, fungsi objektif adalah negatif log-likelihood.
+
+Keunggulan Nelder-Mead untuk masalah estimasi mortalitas meliputi: (1) tidak memerlukan perhitungan turunan, yang bermanfaat ketika fungsi likelihood memiliki bentuk kompleks, (2) relatif robust terhadap permukaan objektif yang noisy atau memiliki banyak local minima, dan (3) dapat menangani constraint melalui transformasi parameter atau metode penalty. Dalam penelitian ini, Nelder-Mead digunakan untuk estimasi simultan parameter $(B, C, \gamma)$ pada model STLT dengan constraint $\theta = 1/(BC^u)$.
+
+Untuk model dengan jumlah parameter yang lebih besar atau struktur constraint yang lebih kompleks, metode alternatif seperti algoritma \textit{Sequential Quadratic Programming} (SQP) atau \textit{Interior Point Methods} dapat memberikan konvergensi yang lebih cepat dengan memanfaatkan informasi gradien dan Hessian.
 
 \section{Kriteria Evaluasi Model}
 
@@ -386,6 +412,26 @@ Untuk evaluasi model mortalitas, SSE dapat dihitung berdasarkan:
 \end{itemize}
 
 Nilai SSE yang lebih kecil mengindikasikan kesesuaian yang lebih baik. Metrik ini terutama berguna untuk model seperti Coale-Kisker yang tidak diestimasi menggunakan MLE, sehingga tidak memiliki nilai log-likelihood yang dapat dibandingkan.
+
+\subsection{Information Criteria: AIC dan BIC}
+
+Untuk model yang diestimasi menggunakan MLE, kriteria informasi menyediakan framework yang lebih komprehensif untuk seleksi model dengan menyeimbangkan antara \textit{goodness-of-fit} dan kompleksitas model. Dua kriteria yang paling umum digunakan adalah Akaike Information Criterion (AIC) dan Bayesian Information Criterion (BIC).
+
+\textit{Akaike Information Criterion} (AIC) didefinisikan sebagai:
+\begin{equation}
+\text{AIC} = -2\ell(\hat{\boldsymbol{\theta}}) + 2k,
+\label{eq:aic}
+\end{equation}
+dimana $\ell(\hat{\boldsymbol{\theta}})$ adalah nilai maksimum log-likelihood dan $k$ adalah jumlah parameter yang diestimasi dalam model. Term penalti $2k$ berfungsi untuk mencegah \textit{overfitting} dengan memberikan penalti terhadap model yang terlalu kompleks. AIC berasal dari teori informasi dan dapat diinterpretasikan sebagai estimator dari \textit{expected relative Kullback-Leibler divergence} antara model dan proses pembangkit data yang sebenarnya \citep{akaike1974new}.
+
+\textit{Bayesian Information Criterion} (BIC), juga dikenal sebagai \textit{Schwarz Criterion}, didefinisikan sebagai:
+\begin{equation}
+\text{BIC} = -2\ell(\hat{\boldsymbol{\theta}}) + k \ln(n),
+\label{eq:bic}
+\end{equation}
+dimana $n$ adalah ukuran sampel (jumlah observasi). BIC memberikan penalti yang lebih berat terhadap kompleksitas model dibandingkan AIC, khususnya untuk sampel besar ($n > e^2 \approx 7.4$), karena $\ln(n) > 2$. BIC memiliki justifikasi Bayesian dan cenderung memilih model yang lebih parsimoni \citep{schwarz1978estimating}.
+
+Untuk kedua kriteria, model dengan nilai AIC atau BIC yang **lebih kecil** dianggap lebih baik. Perbedaan antara nilai kriteria informasi dua model dapat digunakan untuk mengukur kekuatan evidensi: perbedaan $\Delta \text{AIC} > 10$ atau $\Delta \text{BIC} > 10$ umumnya dianggap sebagai evidensi kuat bahwa model dengan nilai lebih rendah lebih superior. Dalam penelitian ini, AIC dan BIC digunakan untuk membandingkan kinerja relatif antara model mortalitas statis (Gompertz-Makeham, Heligman-Pollard) dengan model berbasis EVT (TLT, STLT, DSTLT).
 
 \subsection{In-Sample Fit vs Out-of-Sample Forecast}
 
