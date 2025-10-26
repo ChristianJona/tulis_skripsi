@@ -1,0 +1,59 @@
+\chapter{KESIMPULAN DAN SARAN}
+
+Bab ini menyajikan rangkuman dari seluruh penelitian yang telah dilakukan, meliputi kesimpulan utama dari analisis empiris model \textit{Smooth Threshold Life Table} (STLT) dan \textit{Dynamic Smooth Threshold Life Table} (DSTLT), serta saran untuk penelitian lanjutan. Bab ini juga membahas keterbatasan penelitian yang perlu diperhatikan dalam interpretasi hasil.
+
+Struktur bab ini terdiri dari tiga bagian utama. Sub-bab 5.1 menyajikan kesimpulan utama yang menjawab tujuan penelitian, Sub-bab 5.2 memberikan saran untuk pengembangan penelitian di masa depan, dan Sub-bab 5.3 mendiskusikan keterbatasan penelitian yang telah dilakukan.
+
+\section{Kesimpulan}
+
+Penelitian ini telah berhasil menganalisis dan membandingkan kinerja model STLT dan DSTLT dalam memodelkan mortalitas usia lanjut ekstrem menggunakan data populasi Belanda dan Jepang. Berdasarkan analisis empiris yang telah dilakukan pada Bab 4, dapat ditarik beberapa kesimpulan utama sebagai berikut:
+
+\textbf{Pertama}, model STLT menunjukkan keunggulan signifikan dibandingkan model TLT dalam hal kontinuitas fungsi \textit{hazard}. Melalui penerapan kendala penghalusan $h_1(N) = h_2(N)$, model STLT berhasil menghilangkan diskontinuitas yang menjadi kelemahan fundamental model TLT. Secara empiris, hal ini tercermin dari kurva mortalitas yang lebih halus dan realistis pada titik ambang batas $N$, sebagaimana terlihat pada visualisasi hasil untuk berbagai kohort di kedua negara.
+
+\textbf{Kedua}, dari perspektif \textit{goodness-of-fit}, model STLT secara konsisten menghasilkan nilai \textit{Sum of Squared Errors} (SSE) yang lebih rendah dibandingkan model TLT dan model-model mortalitas statis lainnya (Gompertz, Heligman-Pollard, Coale-Kisker, Makeham) pada rentang usia lanjut. Keunggulan ini menunjukkan bahwa kombinasi distribusi Gompertz untuk usia menengah dan GPD untuk usia ekstrem dengan kendala penghalusan memberikan fleksibilitas yang memadai untuk menangkap pola deselerasi mortalitas pada usia sangat lanjut.
+
+\textbf{Ketiga}, estimasi parameter $\gamma$ yang secara konsisten bernilai negatif pada sebagian besar kohort memberikan bukti empiris yang mendukung hipotesis adanya batas atas usia manusia (\textit{finite human lifespan}). Nilai $\gamma < 0$ mengimplikasikan bahwa fungsi \textit{hazard} mencapai asimtot horizontal pada usia tertinggi yang dapat dicapai $\omega = N + \theta/|\gamma|$, yang secara teoretis konsisten dengan konsep deselerasi mortalitas pada usia ekstrem.
+
+\textbf{Keempat}, dalam konteks pemodelan dinamis, model DSTLT menunjukkan performa yang kompetitif dibandingkan model Cairns-Blake-Dowd (CBD) dalam memprediksi mortalitas kohort masa depan. Analisis \textit{out-of-sample} pada kohort kelahiran 1902--1908 menunjukkan bahwa DSTLT mampu menangkap tren temporal perubahan mortalitas dengan baik, khususnya pada rentang usia sangat lanjut (di atas 100 tahun) di mana model CBD cenderung kurang akurat.
+
+\textbf{Kelima}, pemilihan parameter $B$ sebagai parameter yang didinamisasi dalam model DSTLT terbukti efektif secara empiris. Pola temporal parameter $B$ yang menunjukkan tren menurun sejalan dengan perbaikan mortalitas lintas kohort, sementara kendala penghalusan tetap terpenuhi melalui penyesuaian otomatis parameter $C$ dan $\theta$.
+
+Secara keseluruhan, penelitian ini berhasil mendemonstrasikan bahwa pendekatan \textit{Extreme Value Theory} melalui model STLT dan ekstensi dinamisnya (DSTLT) menyediakan kerangka kerja yang solid dan fleksibel untuk memodelkan dan memproyeksikan mortalitas pada usia lanjut ekstrem, dengan implikasi penting bagi praktik aktuaria dalam penentuan premi asuransi jiwa, anuitas, dan manajemen risiko longevitas.
+
+\section{Saran Penelitian Lanjutan}
+
+Berdasarkan hasil penelitian dan keterbatasan yang telah diidentifikasi, terdapat beberapa arah pengembangan yang dapat dilakukan untuk penelitian lanjutan:
+
+\textbf{Pertama}, perluasan cakupan data ke negara-negara berkembang, khususnya kawasan Asia Tenggara termasuk Indonesia. Data mortalitas usia lanjut dari populasi dengan karakteristik sosio-ekonomi dan sistem kesehatan yang berbeda akan memberikan validasi yang lebih komprehensif terhadap model STLT dan DSTLT. Hal ini juga akan memberikan wawasan tentang robustness model terhadap heterogenitas populasi.
+
+\textbf{Kedua}, eksplorasi metodologi pemilihan titik ambang batas $N$ yang lebih sistematis. Penelitian ini menggunakan nilai $N$ berdasarkan pedoman dari literatur, namun pendekatan berbasis data seperti \textit{profile likelihood}, \textit{cross-validation}, atau kriteria informasi (AIC/BIC) dapat dikembangkan untuk mengoptimalkan pemilihan threshold secara objektif. Analisis sensitivitas yang lebih mendalam terhadap variasi $N$ juga diperlukan untuk mengukur stabilitas estimasi parameter.
+
+\textbf{Ketiga}, pengembangan model DSTLT multi-parameter dengan mendinamisasi tidak hanya parameter $B$, tetapi juga parameter $\gamma$ atau kombinasi parameter lainnya. Eksplorasi ini dapat memberikan fleksibilitas tambahan dalam menangkap perubahan pola mortalitas lintas kohort yang lebih kompleks, meskipun perlu mempertimbangkan trade-off antara kompleksitas model dan risiko \textit{overfitting}.
+
+\textbf{Keempat}, investigasi lebih lanjut mengenai struktur dependensi antar parameter dalam model STLT. Analisis matriks informasi Fisher dan korelasi parameter dapat memberikan pemahaman yang lebih baik tentang identifiabilitas model dan efisiensi estimasi. Pendekatan Bayesian dengan spesifikasi \textit{prior} yang informatif juga dapat menjadi alternatif untuk mengatasi potensi masalah identifikasi.
+
+\textbf{Kelima}, penerapan model pada konteks aktuaria yang lebih spesifik, seperti perhitungan cadangan anuitas, valuasi produk asuransi jiwa dengan perlindungan hingga usia sangat lanjut, atau pengukuran risiko longevitas dalam skema pensiun. Studi kasus implementasi praktis akan memberikan nilai tambah dalam menunjukkan relevansi model untuk industri asuransi dan dana pensiun.
+
+\textbf{Keenam}, pengembangan metode \textit{bootstrapping} atau simulasi Monte Carlo untuk konstruksi interval kepercayaan parameter dan proyeksi mortalitas yang lebih robust. Hal ini penting mengingat uncertainty yang tinggi pada estimasi mortalitas di usia sangat ekstrem akibat sparseness data.
+
+\textbf{Ketujuh}, perbandingan dengan model-model mortalitas stokastik alternatif yang lebih kompleks seperti model Lee-Carter, Age-Period-Cohort (APC), atau model \textit{machine learning} (misalnya neural networks atau random forests) untuk mengevaluasi trade-off antara interpretabilitas dan akurasi prediksi.
+
+\section{Keterbatasan Penelitian}
+
+Meskipun penelitian ini telah memberikan kontribusi dalam pemodelan mortalitas usia lanjut, terdapat beberapa keterbatasan yang perlu diakui dan dipertimbangkan dalam interpretasi hasil:
+
+\textbf{Pertama, kualitas dan ketersediaan data}. Penelitian ini menggunakan data dari Human Mortality Database (HMD) dan Statistics Netherlands (CBS) yang merupakan sumber data berkualitas tinggi. Namun, pada usia sangat lanjut (di atas 105 tahun), jumlah observasi menjadi sangat terbatas, yang dapat mempengaruhi stabilitas estimasi parameter, khususnya parameter $\gamma$ dalam distribusi GPD. Fenomena \textit{age heaping} dan kesalahan pencatatan usia juga berpotensi mempengaruhi validitas data, meskipun telah dilakukan prosedur validasi usia oleh penyedia data.
+
+\textbf{Kedua, asumsi no migration}. Dalam konstruksi kohort hipotetis, penelitian ini mengasumsikan tidak ada efek migrasi dengan menetapkan $l'_{65} = l_{65}$ dan menghitung $l'_x$ berdasarkan $q_x$ empiris. Asumsi ini menyederhanakan realitas kompleks dinamika populasi, terutama untuk negara dengan tingkat migrasi tinggi. Meskipun penyesuaian migrasi telah dilakukan oleh HMD untuk sebagian data, efek residual dari migrasi neto dapat mempengaruhi pola mortalitas yang diamati.
+
+\textbf{Ketiga, keterbatasan rentang data temporal}. Model DSTLT diestimasi menggunakan kohort kelahiran 1893--1901 untuk \textit{training} dan 1902--1908 untuk \textit{testing}. Rentang waktu ini relatif terbatas untuk menangkap tren jangka panjang perubahan mortalitas, terutama tren perbaikan mortalitas yang dipercepat pada dekade-dekade terakhir. Proyeksi jangka panjang di luar rentang data observasi memerlukan kehati-hatian ekstra.
+
+\textbf{Keempat, asumsi distribusional}. Model STLT mengasumsikan distribusi Gompertz untuk usia di bawah threshold dan GPD untuk usia di atasnya. Meskipun asumsi ini didukung oleh teori \textit{Extreme Value Theory}, validitas asumsi ini pada berbagai populasi dan periode waktu perlu dikaji lebih lanjut. Uji kesesuaian distribusi yang lebih komprehensif, termasuk analisis residual dan diagnostic plots, dapat memperkuat justifikasi pemilihan distribusi.
+
+\textbf{Kelima, kompleksitas komputasi}. Estimasi model STLT dan DSTLT memerlukan optimisasi numerik yang intensif, khususnya karena kendala penghalusan menciptakan interdependensi antar parameter. Konvergensi algoritma optimisasi dapat sensitif terhadap pemilihan nilai awal dan dapat terjebak pada \textit{local optimum}. Penelitian ini menggunakan metode optimisasi standar tanpa eksplorasi mendalam terhadap algoritma alternatif atau strategi inisialisasi yang lebih canggih.
+
+\textbf{Keenam, generalisabilitas hasil}. Hasil penelitian ini didasarkan pada data dari Belanda dan Jepang, dua negara maju dengan sistem pencatatan vital yang sangat baik dan karakteristik mortalitas spesifik. Generalisasi model ke populasi lain, terutama negara berkembang dengan pola mortalitas yang berbeda, memerlukan validasi empiris tambahan.
+
+\textbf{Ketujuh, independensi antar kohort}. Model DSTLT mengasumsikan bahwa parameter evolusi $B_i = \exp(a + bi)$ bersifat deterministik dan linier dalam skala logaritma terhadap tahun kelahiran. Asumsi ini mengabaikan kemungkinan efek periode atau efek interaksi kohort-periode yang lebih kompleks, serta potensi shock eksternal (misalnya pandemi atau perang) yang dapat mempengaruhi pola mortalitas secara non-linear.
+
+Dengan menyadari keterbatasan-keterbatasan ini, hasil penelitian tetap memberikan bukti empiris yang kuat tentang keunggulan model STLT dan DSTLT dalam konteks pemodelan mortalitas usia lanjut ekstrem, serta membuka jalan bagi penelitian lanjutan yang lebih komprehensif.

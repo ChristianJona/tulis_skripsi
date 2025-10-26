@@ -1,0 +1,358 @@
+\chapter{Landasan Teori}
+
+Bab ini berisikan teori yang menjadi dasar penelitian mengenai pemodelan mortalitas usia lanjut dengan pendekatan \textit{Dynamic Smooth Threshold Life Table} (DSTLT). Pembahasan dimulai dengan konsep dasar tabel mortalitas dan notasi aktuaria yang digunakan secara luas dalam analisis mortalitas. Selanjutnya, diuraikan berbagai model mortalitas statis seperti Gompertz-Makeham, Heligman-Pollard, dan Coale-Kisker yang menjadi perbandingan dalam penelitian ini. Pemahaman terhadap \textit{Extreme Value Theory} (EVT) dan pendekatannya dalam memodelkan kejadian ekstrem menjadi landasan penting untuk memahami konstruksi model \textit{Threshold Life Table} (TLT). Model TLT kemudian dikembangkan menjadi \textit{Smoothed Threshold Life Table} (STLT) untuk mengatasi ketidakmulsan fungsi \textit{hazard} di usia ambang. Terakhir, diperkenalkan versi dinamis dari model STLT, yaitu DSTLT, yang memungkinkan pemodelan tren mortalitas antarkohor dan peramalan mortalitas jangka panjang. Seluruh teori yang dipaparkan dalam bab ini mengacu pada kerangka kerja yang dikembangkan oleh \citet{huang2020modelling} dan literatur terkait di bidang aktuaria dan statistika ekstrem.
+
+\section{Konsep Dasar Tabel Mortalitas}
+
+Tabel mortalitas merupakan instrumen fundamental dalam ilmu aktuaria yang menyajikan representasi matematis dari pola kematian suatu populasi. Tabel ini menyediakan informasi kuantitatif mengenai probabilitas bertahan hidup dan kematian pada berbagai usia, yang sangat esensial untuk penilaian risiko longevitas, penetapan premi asuransi jiwa, dan perhitungan kewajiban dana pensiun \citep{dickson2020actuarial}.
+
+\subsection{Fungsi-Fungsi Dasar Mortalitas}
+
+Misalkan $X$ adalah variabel acak kontinu yang menyatakan usia saat kematian seseorang yang baru lahir. Fungsi distribusi kumulatif (\textit{cumulative distribution function}, CDF) dari $X$ didefinisikan sebagai
+\begin{equation}
+    F(x) = P(X \leq x), \quad x \geq 0,
+\end{equation}
+yang menyatakan probabilitas seorang individu meninggal sebelum atau pada usia $x$. Fungsi probabilitas bertahan hidup (\textit{survival function}) dinyatakan sebagai
+\begin{equation}
+    S(x) = P(X > x) = 1 - F(x), \quad x \geq 0,
+\end{equation}
+yang menunjukkan probabilitas seseorang bertahan hidup melampaui usia $x$. Fungsi kepekatan probabilitas (\textit{probability density function}, PDF) dari $X$ adalah
+\begin{equation}
+    f(x) = \frac{dF(x)}{dx} = -\frac{dS(x)}{dx}, \quad x \geq 0,
+\end{equation}
+yang menggambarkan laju kematian instantan pada usia $x$.
+
+Fungsi \textit{hazard} atau fungsi tingkat kematian (\textit{force of mortality}), yang dinotasikan dengan $h(x)$ atau $\mu(x)$, didefinisikan sebagai
+\begin{equation}
+    h(x) = \lim_{\Delta x \to 0^+} \frac{P(x < X \leq x + \Delta x \mid X > x)}{\Delta x} = \frac{f(x)}{S(x)} = -\frac{d \ln S(x)}{dx}.
+\end{equation}
+Fungsi ini mengukur tingkat kematian sesaat pada usia $x$, dengan asumsi individu tersebut telah bertahan hingga usia tersebut. Hubungan antara fungsi \textit{hazard} dan fungsi \textit{survival} dapat dinyatakan melalui relasi integral
+\begin{equation}
+    S(x) = \exp\left(-\int_0^x h(t) \, dt\right).
+\end{equation}
+
+\subsection{Notasi Aktuaria}
+
+Dalam praktik aktuaria, digunakan notasi diskret yang mengadaptasi fungsi-fungsi kontinu di atas ke dalam interval usia yang terpisah, biasanya tahunan. Beberapa notasi aktuaria standar yang digunakan dalam penelitian ini adalah sebagai berikut \citep{dickson2020actuarial}:
+
+\begin{itemize}
+    \item $l_x$: Jumlah individu yang bertahan hidup hingga usia tepat $x$ dalam suatu kohor hipotetis.
+    \item $d_x = l_x - l_{x+1}$: Jumlah kematian yang terjadi antara usia $x$ dan $x+1$.
+    \item $q_x = \frac{d_x}{l_x}$: Probabilitas seorang individu berusia $x$ meninggal sebelum mencapai usia $x+1$.
+    \item $p_x = 1 - q_x = \frac{l_{x+1}}{l_x}$: Probabilitas seorang individu berusia $x$ bertahan hidup hingga usia $x+1$.
+    \item $e_x = \sum_{k=1}^{\omega - x} k \cdot {}_{k|} q_x$: Harapan hidup lengkap pada usia $x$, yaitu ekspektasi jumlah tahun yang akan dijalani oleh seseorang yang kini berusia $x$.
+    \item $m_x = \frac{d_x}{L_x}$: Tingkat kematian sentral, dengan $L_x$ adalah \textit{person-years lived} antara usia $x$ dan $x+1$. Untuk interval satu tahun, sering diasumsikan $m_x \approx \frac{d_x}{(l_x + l_{x+1})/2}$.
+\end{itemize}
+
+Notasi-notasi ini memfasilitasi penghitungan dan analisis mortalitas dalam konteks aktuaria, khususnya untuk keperluan penilaian risiko dan penetapan tarif produk asuransi serta pensiun.
+
+\subsection{Highest Attained Age dan Interval Censoring}
+
+Dalam data mortalitas empiris, khususnya untuk usia lanjut, informasi mengenai usia kematian yang tepat seringkali tidak tersedia. Data yang tersedia biasanya dalam bentuk usia terakhir ulang tahun (\textit{last birthday age}) atau usia terakhir yang dicapai (\textit{highest attained age}). Hal ini menyebabkan data mortalitas bersifat tersensor interval (\textit{interval-censored}).
+
+Misalkan seorang individu tercatat meninggal pada usia $k$ (usia terakhir ulang tahun). Ini berarti usia kematian sebenarnya $X$ berada dalam interval $[k, k+1)$. Dalam konteks estimasi parameter model mortalitas, fungsi likelihood harus memperhitungkan sifat tersensor ini. Untuk individu yang meninggal pada interval $[k, k+1)$, kontribusi terhadap likelihood adalah
+\begin{equation}
+    P(k \leq X < k+1) = S(k) - S(k+1) = S(k) \left[1 - \frac{S(k+1)}{S(k)}\right] = S(k) \cdot q_k,
+\end{equation}
+di mana $q_k$ adalah probabilitas kematian dalam satu tahun pada usia $k$.
+
+Selain tersensor interval, data mortalitas usia lanjut juga sering mengalami tersensor kanan (\textit{right-censored}) untuk individu yang masih hidup pada akhir periode observasi. Jika seorang individu bertahan hidup hingga usia $k$ pada akhir pengamatan, kontribusinya terhadap likelihood adalah $S(k)$, yang mencerminkan probabilitas bertahan hingga setidaknya usia tersebut \citep{huang2020modelling}.
+
+Pemahaman terhadap mekanisme penyensoran ini sangat penting dalam konstruksi fungsi likelihood untuk estimasi parameter model mortalitas berbasis \textit{maximum likelihood estimation} (MLE), yang akan dibahas lebih lanjut dalam bab selanjutnya.
+
+\section{Model Mortalitas Statis}
+
+Model mortalitas statis merupakan model parametrik yang menggambarkan pola kematian sebagai fungsi dari usia tanpa mempertimbangkan dimensi waktu atau perubahan antarkohor. Model-model ini telah digunakan secara luas dalam praktik aktuaria untuk memodelkan tabel mortalitas pada berbagai rentang usia. Bagian ini membahas beberapa model mortalitas statis yang relevan sebagai pembanding terhadap model STLT dalam penelitian ini, meliputi model Gompertz-Makeham, model logistik (Perks, Beard, Kannisto), model Heligman-Pollard, dan metode Coale-Kisker \citep{huang2020modelling, dickson2020actuarial}.
+
+\subsection{Model Gompertz-Makeham}
+
+Salah satu model mortalitas parametrik paling awal dan berpengaruh dikembangkan oleh Benjamin Gompertz pada tahun 1825. Model Gompertz didasarkan pada observasi bahwa tingkat kematian dewasa cenderung meningkat secara eksponensial seiring bertambahnya usia. Fungsi \textit{hazard} atau \textit{force of mortality} dalam model Gompertz dinyatakan sebagai
+\begin{equation}
+    h(x) = B \exp(Cx), \quad x \geq 0,
+\end{equation}
+dengan $B > 0$ adalah parameter skala yang merepresentasikan tingkat mortalitas dasar, dan $C > 0$ adalah parameter bentuk yang mengatur laju peningkatan mortalitas seiring bertambahnya usia. Gompertz mengemukakan penjelasan fisiologis bahwa kapasitas seseorang untuk menghindari kematian secara bertahap menurun seiring bertambahnya usia, yang dapat dikaitkan dengan deteriorasi tubuh secara bertahap akibat akumulasi kerusakan molekuler dan seluler \citep{gompertz1825nature, thatcher1998force}.
+
+William Makeham pada tahun 1860 menyempurnakan model Gompertz dengan menambahkan komponen konstan untuk mengakomodasi penyebab kematian yang dianggap independen terhadap usia, seperti kecelakaan atau penyakit tertentu. Fungsi \textit{hazard} dalam model Gompertz-Makeham adalah
+\begin{equation}
+    h(x) = A + B \exp(Cx), \quad x \geq 0,
+\end{equation}
+dengan $A > 0$ merepresentasikan mortalitas yang tidak terkait dengan penuaan atau pematangan biologis. Model ini dapat diinterpretasikan sebagai model kejutan (\textit{shock model}), di mana waktu hidup individu merupakan minimum dari waktu hingga kematian akibat penuaan (mengikuti distribusi Gompertz) dan waktu hingga kecelakaan fatal (mengikuti distribusi eksponensial), dengan asumsi kedua variabel acak tersebut independen \citep{makeham1860law, bower1997graduation}.
+
+Meskipun model Gompertz-Makeham memberikan kesesuaian yang baik pada rentang usia dewasa, kelemahan utamanya adalah ketidakmampuannya menangkap fenomena deselerasi mortalitas pada usia lanjut (\textit{late-life mortality deceleration}). Fenomena ini mengacu pada perlambatan laju peningkatan mortalitas yang teramati pada usia sangat lanjut, di mana laju kematian tidak lagi meningkat secara eksponensial atau bahkan mencapai plateau \citep{barbi2018plateau, gavrilov2005mortality}. Asumsi peningkatan eksponensial tanpa batas membuat model ini kurang akurat untuk memodelkan mortalitas pada usia lanjut ekstrem, khususnya di atas 90 atau 100 tahun.
+
+\subsection{Model Heligman-Pollard}
+
+Model Heligman-Pollard, yang dikembangkan oleh Heligman dan Pollard pada tahun 1980, menawarkan pendekatan yang lebih komprehensif dengan menggabungkan tiga komponen utama untuk memodelkan probabilitas kematian $q_x$ pada seluruh rentang usia. Model ini berusaha menangkap pola mortalitas manusia dari kelahiran hingga usia lanjut dengan mengintegrasikan tiga sumber risiko kematian: kematian pada usia dini, kematian akibat kecelakaan, dan kematian akibat penuaan biologis. Fungsi probabilitas kematian dalam model Heligman-Pollard dinyatakan sebagai
+\begin{equation}
+    \frac{q_x}{1 - q_x} = A^{(x+B)^C} + D \exp\left(-E[\ln x - \ln F]^2\right) + GH^x, \quad x \geq 1,
+\end{equation}
+dengan $A, B, C, D, E, F, G, H$ adalah parameter model \citep{heligman1980age}. Komponen pertama $A^{(x+B)^C}$ memodelkan mortalitas pada anak usia dini yang umumnya tinggi dan menurun dengan cepat. Komponen kedua $D \exp\left(-E[\ln x - \ln F]^2\right)$ menangkap puncak mortalitas akibat kecelakaan pada usia dewasa muda. Komponen ketiga $GH^x$ merepresentasikan mortalitas akibat penuaan biologis dan dapat dipandang sebagai faktor yang berkaitan dengan hukum Gompertz.
+
+Meskipun model Heligman-Pollard dapat memberikan kesesuaian yang baik dengan data mortalitas pada berbagai rentang usia, model ini memiliki beberapa keterbatasan penting. Pertama, komponen penuaan dalam model ini pada dasarnya mengadopsi hukum Gompertz yang, sebagaimana telah dijelaskan, tidak menggambarkan dengan baik fenomena deselerasi mortalitas pada usia lanjut ekstrem. Penelitian yang dilakukan oleh Olshansky dan Carnes pada tahun 1997 menunjukkan bahwa pola mortalitas usia lanjut tidak mengikuti hukum Gompertz \citep{olshansky1997ever}. Kedua, formulasi model menghasilkan nilai $q_x$ yang selalu kurang dari 1 untuk setiap $x > 0$. Hal ini menjadi kendala praktis dalam konstruksi tabel mortalitas lengkap, karena tabel mortalitas perlu memiliki usia maksimum di mana $q_x = 1$ atau $l_x = 0$. Dalam praktiknya, aktuaris harus menentukan usia terminal (\textit{terminal age}) secara subjektif untuk melengkapi tabel mortalitas berbasis model Heligman-Pollard \citep{huang2020modelling}.
+
+\subsection{Metode Coale-Kisker}
+
+Metode yang dikembangkan oleh Coale dan Kisker pada tahun 1990 merupakan metode ekstrapolasi yang sering digunakan untuk memodelkan mortalitas pada usia lanjut, khususnya di negara-negara berkembang di mana data mortalitas usia tinggi tidak tersedia atau kurang reliabel. Berbeda dengan model-model sebelumnya yang memodelkan fungsi \textit{hazard} atau probabilitas kematian secara langsung, metode Coale-Kisker bekerja dengan mengekstrapolasi tingkat kematian sentral (\textit{central death rate}), $m_x$ \citep{coale1990defects}.
+
+Metode ini menggunakan persamaan rekursif untuk $k(x) = \ln(m_x / m_{x+1})$, yaitu logaritma natural dari rasio tingkat kematian sentral pada dua usia berurutan. Relasi rekursif tersebut adalah
+\begin{equation}
+    k(x) = k(x-1) - R, \quad x \geq x_0,
+\end{equation}
+dengan $R$ adalah konstanta penurunan dan $x_0$ adalah usia awal ekstrapolasi. Konstanta $R$ dihitung menggunakan persamaan
+\begin{equation}
+    R = \frac{(x_1 - x_0) k(x_0) + \ln m_{x_0} - \ln m_{x_1}}{1 + 2 + \cdots + (x_1 - x_0)},
+\end{equation}
+di mana $x_1$ adalah usia akhir ekstrapolasi yang dipilih. Setelah $R$ diperoleh, nilai $k(x)$ dapat dihitung secara iteratif untuk $x > x_0$, dan kemudian $m_x$ dapat dipulihkan menggunakan hubungan $m_x = m_{x-1} \exp(-k(x-1))$.
+
+Kelemahan utama metode Coale-Kisker adalah ketergantungannya pada penetapan nilai $x_0$, $x_1$, dan $m_{x_1}$ secara subjektif. Sebagai contoh, Coale dan Kisker menggunakan $x_0 = 84$, $x_1 = 110$, dan $m_{110} = 1.0$ untuk laki-laki, serta $m_{110} = 0.8$ untuk perempuan dalam analisis mereka. Pilihan subjektif terhadap parameter-parameter ini secara langsung mempengaruhi hasil ekstrapolasi mortalitas pada usia lanjut ekstrem. Akurasi pada usia ekstrem kemungkinan rendah dengan metode ini karena kurva yang dihasilkan sangat bergantung pada titik awal dan akhir ekstrapolasi, yang merupakan kelemahan mendasar dari teknik ini \citep{huang2020modelling}.
+
+Sebagai catatan, dalam penelitian ini, metode Coale-Kisker tidak diestimasi menggunakan \textit{maximum likelihood estimation} seperti model-model lainnya, melainkan menggunakan prosedur ekstrapolasi deterministik sebagaimana dijelaskan di atas. Oleh karena itu, perbandingan kinerja model menggunakan kriteria \textit{sum of squared errors} (SSE) antara $q_x$ observasi dan $q_x$ prediksi, bukan berdasarkan kriteria likelihood atau kriteria informasi seperti AIC atau BIC.
+
+\section{Extreme Value Theory}
+
+\textit{Extreme Value Theory} (EVT) merupakan cabang statistika yang secara khusus menganalisis perilaku nilai-nilai ekstrem dari suatu distribusi probabilitas. Dalam konteks mortalitas, EVT menyediakan kerangka teoretis yang kuat untuk memodelkan probabilitas kejadian langka seperti kematian pada usia lanjut ekstrem dan melakukan ekstrapolasi di luar rentang data observasi secara lebih terjustifikasi secara statistik \citep{coles2001introduction, gbari2017extreme}. Keterbatasan data empiris pada usia sangat lanjut, yang ditandai dengan jumlah observasi yang sedikit dan volatilitas tinggi, menjadikan EVT sebagai alat yang tepat karena dirancang untuk menangani kejadian ekstrem dengan fondasi teoretis yang solid.
+
+\subsection{Konsep Dasar Extreme Value Theory}
+
+Misalkan $T_1, T_2, \ldots, T_n$ adalah sekuens variabel acak independen yang merepresentasikan usia kematian individual dengan fungsi distribusi kumulatif yang sama $_xq_0 = P(T_i \leq x)$ untuk $x \geq 0$ dan $i = 1, \ldots, n$, dengan $_0q_0 = 0$. Variabel acak $T_i$ dapat merepresentasikan total masa hidup sejak lahir hingga kematian, atau sisa masa hidup setelah usia awal tertentu $\alpha$.
+
+Definisikan sekuens maksimum $M_n = \max\{T_1, T_2, \ldots, T_n\}$. Dalam konteks mortalitas, $M_n$ merepresentasikan usia kematian tertinggi yang diamati dalam kelompok homogen beranggotakan $n$ individu yang tunduk pada tabel mortalitas yang sama. EVT mempelajari perilaku asimptotik dari $M_n$ ketika $n \to \infty$ dan memberikan hasil yang analog dengan teorema limit sentral untuk maksimum (bukan untuk jumlah), dengan syarat kondisi teknis tertentu pada fungsi distribusi terpenuhi. Jelas bahwa tanpa restriksi lebih lanjut, $M_n$ akan mendekati batas atas dari support distribusi,
+\begin{equation}
+    \omega = \sup\{x \geq 0 : {}_xq_0 < 1\},
+\end{equation}
+yang mungkin berhingga atau tak berhingga. Hal ini dapat dilihat dari
+\begin{equation}
+    P(M_n \leq x) = ({}_xq_0)^n \to \begin{cases}
+        0 & \text{jika } x < \omega, \\
+        1 & \text{jika } x \geq \omega,
+    \end{cases}
+\end{equation}
+ketika $n \to \infty$.
+
+Namun, setelah $M_n$ dipusatkan dan dinormalisasi secara tepat, distribusinya dapat konvergen ke suatu distribusi limit tertentu. Secara lebih presisi, jika terdapat sekuens bilangan riil $a_n > 0$ dan $b_n \in \mathbb{R}$ sedemikian sehingga sekuens ternormalisasi $(M_n - b_n)/a_n$ konvergen dalam distribusi ke $H$, yaitu
+\begin{equation}
+    \lim_{n \to \infty} P\left(\frac{M_n - b_n}{a_n} \leq x\right) = \lim_{n \to \infty} \left({}_{{a_n x + b_n}}q_0\right)^n = H(x),
+\end{equation}
+untuk semua titik kontinuitas dari $H$, maka $H$ adalah distribusi nilai ekstrem tergeneralisasi (\textit{generalized extreme value distribution}, GEV), yaitu $H = H_\xi$ yang diberikan oleh
+\begin{equation}
+    H_\xi(x) = \begin{cases}
+        \exp\left(-(1 + \xi x)_+^{-1/\xi}\right) & \text{jika } \xi \neq 0, \\
+        \exp(-\exp(-x)) & \text{jika } \xi = 0,
+    \end{cases}
+\end{equation}
+dengan $y_+ = \max\{y, 0\}$ adalah bagian positif dari $y$ \citep{coles2001introduction, resnick2007heavy}. Domain definisi dari $H_\xi$ adalah $(-1/\xi, +\infty)$ jika $\xi > 0$, $(-\infty, -1/\xi)$ jika $\xi < 0$, dan seluruh garis riil $\mathbb{R}$ jika $\xi = 0$. Parameter $\xi$ yang mengontrol ekor kanan distribusi disebut \textit{tail index} atau \textit{extreme value index}. Tiga distribusi nilai ekstrem klasik adalah kasus khusus dari keluarga GEV: jika $\xi > 0$, diperoleh distribusi Fr\'echet; jika $\xi < 0$, diperoleh distribusi Weibull; dan $\xi = 0$ memberikan distribusi Gumbel.
+
+Dalam aplikasi mortalitas, kasus $\xi > 0$ mengimplikasikan masa hidup dengan ekor berat (\textit{heavy tails}), yang berarti fungsi \textit{hazard} menurun seiring bertambahnya usia. Hal ini bertentangan dengan bukti empiris untuk masa hidup manusia. Dengan demikian, kasus $\xi = 0$ dan $\xi < 0$ yang relevan untuk aplikasi asuransi jiwa \citep{gbari2017extreme}. Perlu dicatat bahwa jika kondisi konvergensi terpenuhi dengan $\xi < 0$, maka $\omega < \infty$, sehingga nilai negatif dari $\xi$ mendukung eksistensi usia maksimum berhingga.
+
+Suatu kondisi cukup untuk konvergensi di atas adalah
+\begin{equation}
+    \lim_{x \to \omega} \frac{d}{dx}\left(\frac{1}{\mu_x}\right) = \xi,
+\end{equation}
+dengan $\mu_x$ adalah \textit{force of mortality} pada usia $x$. Secara intuitif, $1/\mu_x$ dapat dipandang sebagai kekuatan resistensi terhadap mortalitas atau kekuatan vitalitas pada usia $x$. Resistensi terhadap mortalitas harus stabil ketika $\xi = 0$ atau menjadi linier secara asimptotik. Nilai $\xi$ negatif mengindikasikan bahwa resistensi pada akhirnya menurun pada usia lanjut. Untuk $\xi < 0$, diperoleh $\omega < \infty$, dan kondisi di atas mengimplikasikan
+\begin{equation}
+    \lim_{x \to \omega} \left[(\omega - x) \mu_x\right] = -\frac{1}{\xi}.
+\end{equation}
+
+\subsection{Pendekatan Peaks Over Threshold (POT)}
+
+Selain pendekatan \textit{block maxima} yang menganalisis nilai maksimum dalam blok-blok data, EVT juga menawarkan pendekatan alternatif yang disebut \textit{Peaks Over Threshold} (POT). Pendekatan ini menganalisis semua nilai observasi yang melebihi suatu ambang batas $u$ yang cukup tinggi, sehingga memanfaatkan informasi dari seluruh data ekstrem yang tersedia, bukan hanya nilai maksimum per blok \citep{coles2001introduction}.
+
+Dalam konteks mortalitas, perhatikan sisa masa hidup $T - x$ pada usia $x$, dengan asumsi $T > x$, yang memiliki fungsi distribusi
+\begin{equation}
+    {}_sq_x = P(T - x \leq s \mid T > x), \quad s \geq 0.
+\end{equation}
+Dapat terjadi bahwa untuk usia lanjut $x$ yang besar, distribusi probabilitas kondisional ini menjadi stabil setelah normalisasi, yaitu terdapat fungsi positif $a(\cdot)$ sedemikian sehingga
+\begin{equation}
+    \lim_{x \to \omega} P\left(\frac{T - x}{a(x)} > s \,\bigg|\, T > x\right) = 1 - G(s), \quad s > 0,
+\end{equation}
+dengan $G$ adalah fungsi distribusi yang tidak degenerasi. Dapat ditunjukkan bahwa hanya kelas terbatas dari fungsi distribusi yang memenuhi kondisi di atas, yaitu
+\begin{equation}
+    G(s) = G_\xi(s) = \ln H_\xi(s) = \begin{cases}
+        1 - (1 + \xi s)_+^{-1/\xi} & \text{jika } \xi \neq 0, \\
+        1 - \exp(-s) & \text{jika } \xi = 0.
+    \end{cases}
+\end{equation}
+Support distribusi ini adalah setengah garis riil positif jika $\xi \geq 0$ dan $[0, -1/\xi]$ jika $\xi < 0$. Keluarga skala terkait yang dikenal sebagai \textit{generalized Pareto distribution} (GPD) didefinisikan sebagai
+\begin{equation}
+    G_{\xi, \beta}(s) = G_\xi\left(\frac{s}{\beta}\right), \quad \beta > 0,
+\end{equation}
+dengan $\beta$ adalah parameter skala. Kasus-kasus khusus dari GPD meliputi distribusi Pareto ketika $\xi > 0$, distribusi Pareto tipe II ketika $\xi < 0$, dan distribusi eksponensial negatif ketika $\xi = 0$. Dengan demikian, ketika $\xi = 0$, sisa masa hidup pada usia tinggi menjadi terdistribusi eksponensial negatif secara asimptotik, sehingga \textit{force of mortality} menjadi konstan, sejalan dengan studi empiris yang dilakukan oleh Gampe pada tahun 2010 \citep{gampe2010human}.
+
+Analisis nilai ekstrem untuk maksimum dengan demikian berkaitan erat dengan studi sisa masa hidup. Dapat ditunjukkan bahwa konvergensi ke GEV berlaku jika dan hanya jika konvergensi ke GPD berlaku. Dengan kata lain, $G_\xi$ menggambarkan sisa masa hidup di atas usia yang cukup tua jika dan hanya jika $H_\xi$ mengatur perilaku maksimum sampel, yaitu jika fungsi distribusi $F$ termasuk dalam domain atraksi dari distribusi GEV.
+
+\subsection{Generalized Pareto Distribution dan Teorema Pickands-Balkema-de Haan}
+
+Untuk suatu fungsi $\beta(\cdot)$ yang sesuai, aproksimasi
+\begin{equation}
+    {}_sq_x \approx G_{\xi; \beta(x)}(s), \quad s \geq 0,
+\end{equation}
+berlaku untuk $x$ yang cukup besar. Aproksimasi ini dijustifikasi oleh Teorema Pickands-Balkema-de Haan yang menyatakan bahwa
+\begin{equation}
+    \lim_{x \to \omega} \sup_{s \geq 0} \left|{}_sq_x - G_{\xi, \beta(x)}(s)\right| = 0,
+\end{equation}
+berlaku dengan syarat $F$ memenuhi kondisi teknis yang cukup umum \citep{balkema1974residual, pickands1975statistical}. Berdasarkan aproksimasi ini, sisa masa hidup pada usia $x$ dapat diperlakukan sebagai sampel acak dari distribusi GPD, dengan syarat $x$ cukup besar.
+
+Jika $\omega < \infty$ (yaitu $\xi < 0$), maka transformasi yang sesuai dari \textit{extreme value index} $\xi$ memiliki interpretasi intuitif. Harapan hidup tersisa pada usia $x$, yang dinotasikan sebagai $e_x$, didefinisikan sebagai
+\begin{equation}
+    e_x = E[T - x \mid T > x].
+\end{equation}
+Aarssen dan de Haan pada tahun 1994 menetapkan bahwa untuk $\xi < 0$, sehingga batas atas $\omega$ ada pada rentang masa hidup, konvergensi ke GEV ekuivalen dengan
+\begin{equation}
+    \lim_{x \to \omega} E\left[\frac{T - x}{\omega - x} \,\bigg|\, T > x\right] = \lim_{x \to \omega} \frac{e_x}{\omega - x} = -\frac{\xi}{1 - \xi} = \alpha.
+\end{equation}
+Para peneliti ini menyebut $\alpha = \alpha(\xi)$ sebagai \textit{perseverance parameter} dan memberikan penjelasan sebagai berikut \citep{aarssen1994domains}. Perhatikan seorang individu yang masih hidup pada usia lanjut $x$. Rasio $(T - x)/(\omega - x)$ merepresentasikan persentase sisa masa hidup aktual $T - x$ terhadap sisa masa hidup maksimum $\omega - x$. Persentase ini menjadi stabil, secara rata-rata, ketika $x \to \omega$ dan konvergen ke $\alpha$, yang dengan demikian muncul sebagai persentase ekspektasi dari sisa masa hidup maksimum yang mungkin, yang secara efektif digunakan oleh individu tersebut.
+
+Teorema Pickands-Balkema-de Haan memberikan justifikasi teoretis untuk pendekatan POT dalam pemodelan mortalitas usia lanjut. Dalam praktik, untuk menerapkan hasil ini, perlu ditentukan usia ambang $u$ (atau $x^*$) sedemikian sehingga aproksimasi GPD cukup akurat untuk $x \geq u$. Pemilihan usia ambang yang tepat merupakan aspek krusial dalam implementasi model berbasis EVT, dan akan dibahas lebih lanjut dalam konteks konstruksi model \textit{Threshold Life Table} pada sub-bab berikutnya.
+
+\section{Model Mortalitas Dinamis: Model Cairns-Blake-Dowd (CBD)}
+
+Model mortalitas dinamis menangkap perubahan pola mortalitas dari waktu ke waktu, yang penting untuk melakukan proyeksi mortalitas masa depan. Berbeda dengan model statis yang mengasumsikan parameter tetap, model dinamis memodelkan parameter sebagai fungsi waktu atau kohor. Salah satu contoh model mortalitas dinamis adalah Model Cairns-Blake-Dowd (CBD).
+
+Model Cairns-Blake-Dowd (CBD) yang diperkenalkan oleh \citet{cairns2006two} dirancang khusus untuk memodelkan mortalitas pada usia lanjut. Model ini menggunakan struktur yang lebih sederhana dibandingkan Lee-Carter namun tetap efektif untuk aplikasi pada rentang usia terbatas.
+
+Model CBD memodelkan logit dari probabilitas kematian satu tahun $q_{x,t}$ sebagai fungsi linear dari usia:
+\begin{equation}
+\text{logit}(q_{x,t}) = \ln\left(\frac{q_{x,t}}{1-q_{x,t}}\right) = \kappa_t^{(1)} + \kappa_t^{(2)} (x - \bar{x}),
+\label{eq:cbd_basic}
+\end{equation}
+dimana:
+\begin{itemize}
+    \item $x$ adalah usia (umumnya untuk rentang usia lanjut, misalnya 60--89 tahun)
+    \item $t$ adalah tahun kalender atau indeks waktu
+    \item $\bar{x}$ adalah usia rata-rata dalam rentang yang dianalisis (untuk centering)
+    \item $\kappa_t^{(1)}$ adalah parameter temporal yang mengatur tingkat mortalitas keseluruhan pada tahun $t$
+    \item $\kappa_t^{(2)}$ adalah parameter temporal yang mengatur slope atau gradien mortalitas terhadap usia pada tahun $t$
+\end{itemize}
+
+Dari persamaan \eqref{eq:cbd_basic}, probabilitas kematian dapat diperoleh melalui transformasi invers:
+\begin{equation}
+q_{x,t} = \frac{\exp(\kappa_t^{(1)} + \kappa_t^{(2)} (x - \bar{x}))}{1 + \exp(\kappa_t^{(1)} + \kappa_t^{(2)} (x - \bar{x}))}.
+\label{eq:cbd_qx}
+\end{equation}
+
+Parameter temporal $\kappa_t^{(1)}$ dan $\kappa_t^{(2)}$ dimodelkan sebagai proses stokastik. Spesifikasi standar menggunakan \textit{random walk with drift}:
+\begin{align}
+\kappa_t^{(1)} &= \kappa_{t-1}^{(1)} + \mu^{(1)} + \epsilon_t^{(1)}, \label{eq:cbd_rw1} \\
+\kappa_t^{(2)} &= \kappa_{t-1}^{(2)} + \mu^{(2)} + \epsilon_t^{(2)}, \label{eq:cbd_rw2}
+\end{align}
+dimana $\mu^{(1)}$ dan $\mu^{(2)}$ adalah drift parameters, dan $\epsilon_t^{(1)}, \epsilon_t^{(2)}$ adalah error terms yang diasumsikan white noise dengan mean nol.
+
+
+
+Dalam penelitian ini, model CBD digunakan sebagai \textit{benchmark} untuk mengevaluasi kemampuan forecasting model Dynamic Smooth Threshold Life Table (DSTLT). Perbandingan dilakukan pada:
+\begin{enumerate}
+    \item \textbf{In-sample fit}: Kesesuaian model terhadap data historis yang digunakan untuk estimasi
+    \item \textbf{Out-of-sample forecast accuracy}: Akurasi proyeksi mortalitas untuk kohor yang tidak termasuk dalam training set
+\end{enumerate}
+
+Model CBD dipilih sebagai benchmark karena merupakan model standar dalam literatur aktuaria untuk proyeksi mortalitas usia lanjut dan telah banyak digunakan dalam praktik industri asuransi dan dana pensiun \citep{villegas2018comparative}.
+
+\section{Maximum Likelihood Estimation (MLE)}
+
+Maximum Likelihood Estimation (MLE) merupakan metode estimasi parameter yang paling umum digunakan dalam statistika dan pemodelan mortalitas. Metode ini memilih nilai parameter yang memaksimalkan probabilitas (atau likelihood) dari data yang diamati.
+
+\subsection{Konsep Dasar}
+
+Misalkan terdapat data observasi $\mathbf{x} = (x_1, x_2, \ldots, x_n)$ yang diasumsikan berasal dari distribusi dengan fungsi kepadatan (atau fungsi massa) probabilitas $f(x; \boldsymbol{\theta})$, dimana $\boldsymbol{\theta}$ adalah vektor parameter yang tidak diketahui. Fungsi likelihood didefinisikan sebagai fungsi dari parameter $\boldsymbol{\theta}$ yang menyatakan probabilitas bersama dari data observasi:
+\begin{equation}
+L(\boldsymbol{\theta}; \mathbf{x}) = \prod_{i=1}^{n} f(x_i; \boldsymbol{\theta}).
+\label{eq:likelihood_definition}
+\end{equation}
+
+Estimator Maximum Likelihood $\hat{\boldsymbol{\theta}}$ adalah nilai parameter yang memaksimalkan fungsi likelihood:
+\begin{equation}
+\hat{\boldsymbol{\theta}} = \arg\max_{\boldsymbol{\theta}} L(\boldsymbol{\theta}; \mathbf{x}).
+\label{eq:mle_definition}
+\end{equation}
+
+Dalam pengerjaannya, lebih mudah untuk mendapatkan solusi dalam bentuk logaritma natural dari likelihood, yang biasa disebut log-likelihood:
+\begin{equation}
+\ell(\boldsymbol{\theta}; \mathbf{x}) = \ln L(\boldsymbol{\theta}; \mathbf{x}) = \sum_{i=1}^{n} \ln f(x_i; \boldsymbol{\theta}).
+\label{eq:loglikelihood_definition}
+\end{equation}
+
+Untuk mendapatkan MLE, biasanya dilakukan dengan mencari solusi dari persamaan:
+\begin{equation}
+\frac{\partial \ell(\boldsymbol{\theta})}{\partial \boldsymbol{\theta}} = \mathbf{0}.
+\label{eq:score_equation}
+\end{equation}
+
+\subsection{MLE untuk Data Tersensor}
+
+Dalam analisis mortalitas, data sering bersifat tersensor, yang memerlukan penyesuaian dalam konstruksi fungsi likelihood.
+
+Untuk data tersensor interval, dimana usia kematian hanya diketahui berada dalam interval $[x, x+1)$, kontribusi likelihood untuk setiap observasi adalah probabilitas berada dalam interval tersebut:
+\begin{equation}
+L_i = P(x < X \leq x+1) = F(x+1; \boldsymbol{\theta}) - F(x; \boldsymbol{\theta}).
+\label{eq:likelihood_interval}
+\end{equation}
+
+Jika terdapat $d_x$ individu yang meninggal dalam interval $[x, x+1)$ dari $l_x$ individu berisiko, dan dengan mengabaikan konstanta kombinatorial, kontribusi log-likelihood adalah:
+\begin{equation}
+\ell_x = d_x \ln[F(x+1; \boldsymbol{\theta}) - F(x; \boldsymbol{\theta})].
+\label{eq:loglik_interval}
+\end{equation}
+
+Dalam bentuk fungsi survival:
+\begin{equation}
+\ell_x = d_x \ln[S(x; \boldsymbol{\theta}) - S(x+1; \boldsymbol{\theta})].
+\label{eq:loglik_interval_survival}
+\end{equation}
+
+Untuk individu yang tersensor kanan pada usia $\tau$ (masih hidup pada akhir pengamatan), kontribusi likelihood adalah probabilitas bertahan hidup melampaui $\tau$:
+\begin{equation}
+L_i = P(X > \tau) = S(\tau; \boldsymbol{\theta}).
+\label{eq:likelihood_right_censored}
+\end{equation}
+
+Jika terdapat $l_\tau$ individu yang tersensor kanan, kontribusi log-likelihood adalah:
+\begin{equation}
+\ell_{\tau} = l_\tau \ln S(\tau; \boldsymbol{\theta}).
+\label{eq:loglik_right_censored}
+\end{equation}
+
+Untuk data mortalitas dengan rentang usia dari $x_{\min}$ hingga $\tau$, fungsi log-likelihood total menggabungkan kontribusi dari semua interval usia dan data tersensor kanan:
+\begin{equation}
+\ell(\boldsymbol{\theta}) = \sum_{x=x_{\min}}^{\tau-1} d_x \ln[S(x; \boldsymbol{\theta}) - S(x+1; \boldsymbol{\theta})] + l_\tau \ln S(\tau; \boldsymbol{\theta}) - l_{x_{\min}} \ln S(x_{\min}; \boldsymbol{\theta}).
+\label{eq:loglik_total_censored}
+\end{equation}
+
+Normalisasi dengan $S(x_{\min})$ memastikan bahwa likelihood dikondisikan pada bertahan hidup hingga usia awal pengamatan, yang konsisten dengan definisi probabilitas kondisional dalam analisis kohor.
+
+Struktur likelihood ini merupakan dasar untuk estimasi parameter dalam model TLT, STLT, dan DSTLT yang akan dibahas pada Bab 3.
+
+
+
+\section{Kriteria Evaluasi Model}
+
+Evaluasi kinerja model mortalitas memerlukan kriteria yang tepat untuk mengukur kesesuaian model terhadap data historis dan akurasi proyeksi untuk data masa depan.
+
+\subsection{Sum of Squared Errors (SSE)}
+
+Sum of Squared Errors mengukur total deviasi kuadrat antara nilai prediksi model dengan nilai observasi:
+\begin{equation}
+\text{SSE} = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2,
+\label{eq:sse}
+\end{equation}
+dimana $y_i$ adalah nilai observasi (misalnya, $q_x$ empiris atau tingkat mortalitas observasi) dan $\hat{y}_i$ adalah nilai prediksi dari model.
+
+Untuk evaluasi model mortalitas, SSE dapat dihitung berdasarkan:
+\begin{itemize}
+    \item Probabilitas kematian: $\text{SSE}_q = \sum_x (q_x^{\text{obs}} - q_x^{\text{pred}})^2$
+    \item Tingkat mortalitas: $\text{SSE}_\mu = \sum_x (\mu_x^{\text{obs}} - \mu_x^{\text{pred}})^2$
+\end{itemize}
+
+Nilai SSE yang lebih kecil mengindikasikan kesesuaian yang lebih baik. Metrik ini terutama berguna untuk model seperti Coale-Kisker yang tidak diestimasi menggunakan MLE, sehingga tidak memiliki nilai log-likelihood yang dapat dibandingkan.
+
+\subsection{In-Sample Fit vs Out-of-Sample Forecast}
+
+Untuk mengevaluasi kemampuan prediksi model, diperlukan ukuran yang membandingkan proyeksi model dengan data aktual yang tidak digunakan dalam estimasi. Evaluasi model dapat dibagi menjadi dua kategori:
+
+\begin{itemize}
+    \item \textbf{In-sample fit}: Kesesuaian model terhadap data yang digunakan untuk estimasi parameter (training set). Ukuran ini menilai seberapa baik model menangkap pola dalam data historis.
+    
+    \item \textbf{Out-of-sample forecast}: Akurasi proyeksi model pada data yang tidak digunakan dalam estimasi (test set). Ukuran ini menilai kemampuan generalisasi dan prediksi model.
+\end{itemize}
+
+Untuk model dinamis seperti DSTLT, evaluasi out-of-sample sangat penting karena tujuan utama model adalah untuk melakukan proyeksi mortalitas masa depan.
+
