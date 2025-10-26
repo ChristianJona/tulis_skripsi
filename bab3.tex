@@ -160,430 +160,217 @@ Secara umum, tidak terdapat jaminan bahwa $BC^u = \frac{1}{\theta}$. Dalam estim
 Loncatan mendadak dalam laju mortalitas sesaat tidak memiliki justifikasi biologis. Proses penuaan dan deteriorasi fisiologis bersifat gradual dan kontinu, sehingga laju mortalitas sesaat seharusnya juga berubah secara mulus. Keterbatasan ini memotivasi pengembangan model Smoothed Threshold Life Table (STLT) yang akan dibahas pada bagian selanjutnya, dimana \textit{smoothing constraint} diperkenalkan untuk memastikan kemulusan fungsi hazard pada usia ambang.
 \section{Model Smoothed Threshold Life Table (STLT)}
 
-Model Threshold Life Table (TLT) yang telah dibahas pada bagian sebelumnya memberikan kerangka kerja yang solid untuk pemodelan mortalitas usia lanjut dengan mengintegrasikan Extreme Value Theory. Namun, model ini memiliki keterbatasan mendasar: fungsi hazard tidak dijamin kontinu pada usia ambang $u$. Bagian ini membahas pengembangan model Smoothed Threshold Life Table (STLT) yang mengatasi keterbatasan tersebut melalui penambahan \textit{smoothing constraint}.
+Model Threshold Life Table (TLT) yang telah dibahas memberikan kerangka kerja yang solid untuk pemodelan mortalitas usia lanjut dengan mengintegrasikan Extreme Value Theory. Namun, model ini memiliki keterbatasan mendasar: \textbf{fungsi hazard tidak dijamin kontinu pada usia ambang $u$}, yang mengakibatkan loncatan mendadak dalam laju mortalitas sesaat. Keterbatasan ini memotivasi pengembangan model Smoothed Threshold Life Table (STLT) yang memastikan kemulusan fungsi hazard melalui penambahan \textit{smoothing constraint}.
 
-\subsection{Masalah Diskontinuitas Fungsi Hazard pada Model TLT}
+\subsection{Masalah Diskontinuitas dan Derivasi Smoothing Constraint}
 
-\subsubsection{Fungsi Hazard Model TLT}
-
-Fungsi hazard merepresentasikan laju mortalitas sesaat pada usia tertentu, kondisional pada bertahan hidup hingga usia tersebut. Untuk model TLT, fungsi hazard didefinisikan secara \textit{piecewise}:
-
+Dalam model TLT, fungsi hazard didefinisikan secara \textit{piecewise}: $h(x) = BC^x$ untuk $x \leq u$ (Gompertz) dan $h(x) = \frac{1}{\theta + \gamma(x-u)}$ untuk $x > u$ (GPD). Pada titik transisi $x = u$, nilai fungsi hazard dari kedua komponen adalah $\lim_{x \to u^-} h(x) = BC^u$ dan $\lim_{x \to u^+} h(x) = \frac{1}{\theta}$. Karena parameter $(B, C)$ dan $(\theta, \gamma)$ diestimasi secara independen, secara umum $BC^u \neq \frac{1}{\theta}$, yang mengakibatkan diskontinuitas:
 \begin{equation}
-h(x) =
-\begin{cases}
-BC^x, & x \leq u \quad \text{(Gompertz)} \\[8pt]
-\displaystyle\frac{1}{\theta + \gamma(x-u)}, & x > u \quad \text{(GPD)}
-\end{cases}
-\label{eq:tlt_hazard_piecewise}
+\Delta h(u) = BC^u - \frac{1}{\theta} \neq 0.
+\label{eq:stlt_hazard_discontinuity}
 \end{equation}
 
-Untuk bagian Gompertz ($x \leq u$), fungsi hazard diperoleh dari:
+Loncatan mendadak dalam laju mortalitas sesaat tidak memiliki justifikasi biologis, karena proses penuaan dan deteriorasi fisiologis bersifat gradual dan kontinu. Untuk mengatasi masalah ini, model STLT menambahkan kondisi kontinuitas eksplisit pada fungsi hazard di usia ambang:
 \begin{equation}
-h_1(x) = \frac{f(x)}{S(x)} = \frac{BC^x \exp\left(-\frac{B}{\ln C}(C^x - 1)\right)}{\exp\left(-\frac{B}{\ln C}(C^x - 1)\right)} = BC^x,
-\label{eq:hazard_gompertz_derivation}
-\end{equation}
-yang menunjukkan pertumbuhan eksponensial seiring bertambahnya usia.
-
-Untuk bagian GPD ($x > u$), fungsi hazard diperoleh dari fungsi survival kondisional $G(x-u; \theta, \gamma) = \left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}$. Dengan diferensiasi dan manipulasi aljabar:
-\begin{align}
-h_2(x) &= \frac{g(x-u; \theta, \gamma)}{G(x-u; \theta, \gamma)} \nonumber \\
-&= \frac{\frac{1}{\theta}\left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-(1+1/\gamma)}}{\left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}} \nonumber \\
-&= \frac{1}{\theta + \gamma(x-u)}.
-\label{eq:hazard_gpd_derivation}
-\end{align}
-
-\subsubsection{Evaluasi Kontinuitas pada Usia Ambang}
-
-Pada titik transisi $x = u$, nilai fungsi hazard dari kedua komponen adalah:
-\begin{itemize}
-    \item Limit dari kiri (Gompertz): $\lim_{x \to u^-} h(x) = BC^u$
-    \item Limit dari kanan (GPD): $\lim_{x \to u^+} h(x) = \frac{1}{\theta + \gamma(N-N)} = \frac{1}{\theta}$
-\end{itemize}
-
-Secara umum, tidak terdapat jaminan bahwa $BC^u = \frac{1}{\theta}$. Dalam estimasi model TLT, parameter $(B, C)$ dan $(\theta, \gamma)$ diestimasi secara independen untuk masing-masing komponen, sehingga kondisi kontinuitas tidak secara otomatis terpenuhi. Ketidaksamaan ini mengakibatkan diskontinuitas (loncatan) pada fungsi hazard:
-\begin{equation}
-\Delta h(u) = h_1(u) - h_2(u) = BC^u - \frac{1}{\theta} \neq 0.
-\label{eq:hazard_jump}
-\end{equation}
-
-
-
-Loncatan mendadak dalam laju mortalitas sesaat tidak memiliki justifikasi biologis. Proses penuaan dan deteriorasi fisiologis bersifat gradual dan kontinu, sehingga laju mortalitas sesaat seharusnya juga berubah secara mulus. Keterbatasan ini memotivasi pengembangan model STLT yang memastikan kemulusan fungsi hazard melalui penambahan \textit{constraint} matematis.
-
-\subsection{Derivasi Smoothing Constraint}
-
-Model STLT dikembangkan dengan menambahkan kondisi kontinuitas eksplisit pada fungsi hazard di usia ambang $u$. Bagian ini menyajikan derivasi matematis lengkap untuk \textit{smoothing constraint}.
-
-Untuk memastikan fungsi hazard kontinu pada $x = u$, dikenakan kondisi:
-\begin{equation}
-h_1(u) = h_2(u).
+BC^u = \frac{1}{\theta}.
 \label{eq:smoothing_condition}
 \end{equation}
 
-Substitusi definisi fungsi hazard dari persamaan \eqref{eq:tlt_hazard_piecewise}:
-\begin{equation}
-BC^u = \frac{1}{\theta + \gamma(N-N)}.
-\label{eq:smoothing_substitution}
-\end{equation}
-
-Perhatikan bahwa pada $x = u$, suku $\gamma(x-u)$ bernilai nol, sehingga persamaan menjadi:
-\begin{equation}
-BC^u = \frac{1}{\theta}.
-\label{eq:smoothing_simplified}
-\end{equation}
-
-Dari persamaan \eqref{eq:smoothing_simplified}, diperoleh hubungan eksplisit antara parameter skala GPD dengan parameter Gompertz:
+Dari persamaan \eqref{eq:smoothing_condition}, diperoleh hubungan eksplisit antara parameter skala GPD dengan parameter Gompertz:
 \begin{equation}
 \boxed{\theta = \frac{1}{BC^u}}
 \label{eq:theta_constraint}
 \end{equation}
 
-Persamaan \eqref{eq:theta_constraint} merupakan hasil kunci dari \textit{smoothing constraint}. Hubungan ini menunjukkan bahwa parameter skala GPD ($\theta$) bukan lagi parameter bebas yang dapat diestimasi secara independen, melainkan merupakan fungsi deterministik dari parameter Gompertz $(B, C)$ dan usia ambang $u$.
+Persamaan \eqref{eq:theta_constraint} merupakan \textit{smoothing constraint} yang menjadi kunci model STLT. Hubungan ini menunjukkan bahwa parameter skala GPD ($\theta$) bukan lagi parameter bebas, melainkan fungsi deterministik dari parameter Gompertz $(B, C)$ dan usia ambang $u$. Dengan constraint ini, model STLT memiliki tiga parameter bebas $(B, C, \gamma)$ dan satu parameter turunan $\theta = \frac{1}{BC^u}$.
 
-\subsection{Formula Model Smooth Threshold Life Table (STLT)}
+\subsection{Formulasi Model STLT}
 
-Dengan menerapkan \textit{smoothing constraint}, model STLT dapat diformulasikan secara lengkap dengan parameter efektif $(B, C, \gamma, N)$.
-
-\\subsection{Formulasi Model STLT}
-
-Dengan menerapkan \textit{smoothing constraint} $\theta = \frac{1}{BC^u}$, model STLT dapat diformulasikan secara lengkap. Berbeda dengan model TLT, parameter skala GPD ($\theta$) bukan lagi parameter bebas, melainkan ditentukan oleh parameter Gompertz dan usia ambang.
+Dengan menerapkan \textit{smoothing constraint}, model STLT dapat diformulasikan secara lengkap. Struktur model tetap \textit{piecewise}, menggabungkan Gompertz untuk $x \leq u$ dan GPD untuk $x > u$, namun dengan parameter yang saling terhubung.
 
 \subsubsection{Komponen Gompertz ($x \leq u$)}
 
-Untuk usia yang tidak melebihi usia ambang, model STLT menggunakan distribusi Gompertz yang identik dengan model TLT:
-
-\paragraph{Fungsi Distribusi Kumulatif:}
+Untuk usia di bawah atau sama dengan usia ambang $u$, model STLT menggunakan distribusi Gompertz yang identik dengan model TLT. Fungsi survival adalah:
 \begin{equation}
-F(x) = 1 - \exp\left(-\frac{B}{\ln C}(C^x - 1)\right), \quad x \leq u.
-\label{eq:stlt_gompertz_cdf}
-\end{equation}
-
-\paragraph{Fungsi Survival:}
-\begin{equation}
-S(x) = \exp\left(-\frac{B}{\ln C}(C^x - 1)\right), \quad x \leq N.
+S(x) = \exp\left(-\frac{B}{\ln C}(C^x - 1)\right), \quad x \leq u,
 \label{eq:stlt_gompertz_survival}
 \end{equation}
-
-\paragraph{Fungsi Hazard:}
-\begin{equation}
-h(x) = BC^x, \quad x \leq N.
-\label{eq:stlt_gompertz_hazard}
-\end{equation}
-
-Parameter model untuk bagian ini adalah $(B, C)$ dengan interpretasi yang sama seperti pada model TLT: $B > 0$ adalah parameter skala yang merepresentasikan tingkat mortalitas dasar, dan $C > 1$ adalah parameter bentuk yang mengatur laju peningkatan mortalitas.
+dengan PDF $f(x) = BC^x \exp\left(-\frac{B}{\ln C}(C^x - 1)\right)$ dan fungsi hazard $h(x) = BC^x$. Parameter $B > 0$ mengatur tingkat mortalitas dasar, sementara $C > 1$ mengatur laju peningkatan mortalitas seiring bertambahnya usia.
 
 \subsubsection{Komponen GPD ($x > u$)}
 
-Untuk usia yang melebihi usia ambang, model STLT menggunakan Generalized Pareto Distribution dengan parameter skala yang ditentukan oleh \textit{smoothing constraint}.
-
-\paragraph{Fungsi Distribusi Kumulatif:}
-
-Dengan substitusi $\theta = \frac{1}{BC^u}$ ke dalam formulasi GPD, diperoleh tiga kasus bergantung pada nilai parameter bentuk $\gamma$:
-
-\textbf{Kasus 1: $\gamma > 0$ (ekor berat, tidak ada batas atas usia)}
-\begin{equation}
-F(x) = 1 - S(u) \left(1 + \gamma \cdot BC^u(x-u)\right)^{-1/\gamma}, \quad x > u.
-\label{eq:stlt_gpd_cdf_positive}
-\end{equation}
-
-\textbf{Kasus 2: $\gamma = 0$ (ekor eksponensial, tidak ada batas atas usia)}
-
-Untuk $\gamma \to 0$, GPD konvergen ke distribusi eksponensial:
-\begin{equation}
-F(x) = 1 - S(u) \exp\left(-BC^u(x-u)\right), \quad x > u.
-\label{eq:stlt_gpd_cdf_zero}
-\end{equation}
-
-\textbf{Kasus 3: $\gamma < 0$ (ekor terbatas, terdapat batas atas usia)}
-\begin{equation}
-F(x) = 1 - S(u) \left(1 - |\gamma| \cdot BC^u(x-u)\right)^{1/|\gamma|}, \quad N < x < u + \frac{1}{BC^u|\gamma|}.
-\label{eq:stlt_gpd_cdf_negative}
-\end{equation}
-
-Untuk kasus $\gamma < 0$, terdapat batas atas usia (\textit{highest attained age}):
-\begin{equation}
-\omega = u + \frac{\theta}{|\gamma|} = u + \frac{1}{BC^u|\gamma|},
-\label{eq:stlt_omega}
-\end{equation}
-dimana $F(\omega) = 1$ dan $S(\omega) = 0$.
-
-\paragraph{Fungsi Survival:}
-
-Fungsi survival untuk bagian GPD dapat ditulis sebagai:
-
-\textbf{Untuk $\gamma \neq 0$:}
+Untuk usia di atas usia ambang $u$, model STLT menggunakan GPD dengan parameter skala $\theta = \frac{1}{BC^u}$. Fungsi survival keseluruhan adalah:
 \begin{equation}
 S(x) = S(u) \left(1 + \gamma \cdot BC^u(x-u)\right)^{-1/\gamma}, \quad x > u,
-\label{eq:stlt_gpd_survival_general}
+\label{eq:stlt_gpd_survival}
 \end{equation}
-dengan batasan $x < \omega$ jika $\gamma < 0$.
-
-\textbf{Untuk $\gamma = 0$:}
+dengan batasan $x < \omega$ jika $\gamma < 0$. Fungsi PDF dapat diturunkan dari $f(x) = -S'(x)$:
 \begin{equation}
-S(x) = S(u) \exp\left(-BC^u(x-u)\right), \quad x > u.
-\label{eq:stlt_gpd_survival_zero}
+f(x) = S(u) \cdot BC^u \left(1 + \gamma \cdot BC^u(x-u)\right)^{-(1+1/\gamma)}, \quad x > u.
+\label{eq:stlt_gpd_pdf}
 \end{equation}
-
-Perhatikan bahwa dalam semua formulasi di atas, nilai $S(u)$ dihitung menggunakan fungsi survival Gompertz pada persamaan \eqref{eq:stlt_gompertz_survival}, sehingga memastikan kontinuitas fungsi survival pada $x = u$.
-
-\paragraph{Fungsi Hazard:}
 
 Fungsi hazard untuk bagian GPD adalah:
 \begin{equation}
-h(x) = \frac{1}{\frac{1}{BC^u} + \gamma(x-u)} = \frac{BC^u}{1 + \gamma \cdot BC^u(x-u)}, \quad x > u.
+h(x) = \frac{BC^u}{1 + \gamma \cdot BC^u(x-u)}, \quad x > u.
 \label{eq:stlt_gpd_hazard}
 \end{equation}
 
-\subsubsection{Verifikasi Kontinuitas Fungsi Hazard}
+Kontinuitas fungsi hazard dapat diverifikasi dengan mengevaluasi limit: $\lim_{x \to u^+} h(x) = \frac{BC^u}{1 + 0} = BC^u$, yang sama dengan $\lim_{x \to u^-} h(x) = BC^u$, sehingga $h(u^-) = h(u^+) = BC^u$.
 
-Keunggulan utama model STLT adalah kontinuitas fungsi hazard pada usia ambang $u$. Hal ini dapat diverifikasi dengan mengevaluasi limit dari kiri dan kanan:
-
-\textbf{Limit dari kiri (Gompertz):}
+\paragraph{Derivasi Highest Attained Age.} Untuk kasus $\gamma < 0$, distribusi memiliki batas atas. Batas usia maksimum $\omega$ diperoleh dari kondisi bahwa argumen dalam fungsi survival harus non-negatif:
 \begin{equation}
-\lim_{x \to u^-} h(x) = BC^u.
-\label{eq:hazard_left_limit}
+1 + \gamma \cdot BC^u(x-u) \geq 0.
 \end{equation}
-
-\textbf{Limit dari kanan (GPD):}
+Karena $\gamma < 0$, kondisi ini ekivalen dengan:
+\begin{align}
+1 - |\gamma| \cdot BC^u(x-u) &\geq 0 \nonumber \\
+|\gamma| \cdot BC^u(x-u) &\leq 1 \nonumber \\
+x - u &\leq \frac{1}{BC^u|\gamma|} \nonumber \\
+x &\leq u + \frac{1}{BC^u|\gamma|}.
+\end{align}
+Dengan substitusi $\theta = \frac{1}{BC^u}$, diperoleh:
 \begin{equation}
-\lim_{x \to u^+} h(x) = \frac{BC^u}{1 + \gamma \cdot BC^u(N-N)} = \frac{BC^u}{1 + 0} = BC^u.
-\label{eq:hazard_right_limit}
+\boxed{\omega = u + \frac{\theta}{|\gamma|} = u + \frac{1}{BC^u|\gamma|}}
+\label{eq:stlt_omega_derivation}
 \end{equation}
+dimana $S(\omega) = 0$ dan $F(\omega) = 1$.
 
-Karena kedua limit bernilai sama, maka:
-\begin{equation}
-h(u^-) = h(u^+) = BC^u,
-\label{eq:hazard_continuity}
-\end{equation}
-yang membuktikan bahwa fungsi hazard kontinu pada $x = u$. Kontinuitas ini memastikan tidak ada loncatan mendadak dalam laju mortalitas sesaat, sehingga menghasilkan transisi yang lebih realistis secara biologis antara usia lanjut non-ekstrem dan usia lanjut ekstrem.
-
-\subsubsection{Interpretasi Parameter}
-
-Model STLT memiliki tiga parameter bebas untuk estimasi: $(B, C, \gamma)$, dengan parameter keempat $\theta$ ditentukan oleh constraint. Interpretasi masing-masing parameter adalah:
-
-\begin{itemize}
-    \item \textbf{$B$}: Parameter skala Gompertz yang mengatur tingkat mortalitas dasar. Nilai $B$ yang lebih besar mengindikasikan tingkat mortalitas yang lebih tinggi pada usia awal periode pengamatan.
-    
-    \item \textbf{$C$}: Parameter bentuk Gompertz yang mengatur laju akselerasi mortalitas. Nilai $C$ yang lebih besar mengindikasikan percepatan mortalitas yang lebih cepat seiring bertambahnya usia.
-    
-    \item \textbf{$\gamma$}: Parameter bentuk GPD yang menentukan karakteristik ekor distribusi dan keberadaan batas atas usia. Nilai $\gamma < 0$ (yang umum dalam aplikasi mortalitas manusia) mengimplikasikan adanya batas maksimum usia yang dapat dicapai.
-    
-    \item \textbf{$\theta = \frac{1}{BC^u}$}: Parameter skala GPD yang secara otomatis ditentukan oleh constraint untuk memastikan kontinuitas hazard. Parameter ini mengatur dispersi distribusi exceedance di atas usia ambang.
-\end{itemize}
-
-Hubungan fungsional antara $\theta$ dan parameter lainnya menciptakan struktur model yang terintegrasi, dimana kedua komponen (Gompertz dan GPD) tidak lagi independen tetapi saling terhubung melalui kondisi kemulusan.
-
-\subsection{Struktur Likelihood Model STLT}
-
-Fungsi likelihood untuk model STLT dengan parameter $\boldsymbol{\theta} = (B, C, \gamma, N)$ adalah:
-\begin{equation}
-\begin{split}
-L_{\text{STLT}}(B, C, \gamma; u) = &\prod_{x=x_{\text{mulai}}}^{N-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
-&\times \prod_{x=u}^{\tau-1} \left(\frac{S(x) - S(x+1)}{S(x_{\text{mulai}})}\right)^{d_x} \\
-&\times \left(\frac{S(\tau)}{S(x_{\text{mulai}})}\right)^{l_\tau},
-\end{split}
-\label{eq:stlt_likelihood}
-\end{equation}
-dengan fungsi survival $S(x)$ yang didefinisikan pada persamaan \eqref{eq:stlt_survival}.
-
-Fungsi log-likelihood adalah:
-\begin{equation}
-\ell(B, C, \gamma; u) = \sum_{x=x_{\text{mulai}}}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}})).
-\label{eq:stlt_loglikelihood}
-\end{equation}
-
-Struktur likelihood ini menyebabkan tidakmungkin dekomposisi likelihood seperti model TLT.
+Parameter bentuk $\gamma$ menentukan karakteristik ekor distribusi: $\gamma < 0$ mengimplikasikan adanya batas atas usia (finite lifespan), $\gamma = 0$ ekivalen dengan distribusi eksponensial, dan $\gamma > 0$ mengimplikasikan ekor berat tanpa batas atas.
 
 \subsection{Estimasi Parameter Model STLT}
 
-Estimasi parameter model STLT menggunakan metode Maximum Likelihood Estimation (MLE) dengan prosedur \textit{profile likelihood} untuk pemilihan usia ambang optimal. Algoritma estimasi dapat dirangkum sebagai berikut:
+Estimasi parameter model STLT menggunakan metode Maximum Likelihood Estimation (MLE) dengan prosedur \textit{profile likelihood} untuk pemilihan usia ambang optimal. Berbeda dengan model TLT yang dapat mendekomposisi likelihood menjadi dua komponen independen, model STLT memerlukan estimasi simultan parameter $(B, C, \gamma)$ karena adanya \textit{smoothing constraint} yang menghubungkan kedua komponen.
 
-\begin{enumerate}
-    \item \textbf{Inisialisasi}:
-    \begin{itemize}
-        \item Tentukan rentang kandidat usia ambang: $u \in \{u_{\min}, u_{\min}+1, \ldots, u_{\max}\}$
-        \item Umumnya $u_{\min} = 85$ dan $u_{\max} = 100$
-        \item Set $\ell_p^* = -\infty$ dan $\hat{u} = \emptyset$
-    \end{itemize}
-    
-    \item \textbf{Iterasi untuk setiap kandidat $u$}:
-    \begin{enumerate}
-        \item Definisikan fungsi objektif:
-        \begin{equation}
-        \ell(B, C, \gamma; u) = \sum_{x=x_{\text{mulai}}}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_{x_{\text{mulai}}} \ln(S(x_{\text{mulai}}))
-        \end{equation}
-        dengan $S(x)$ menggunakan constraint $\theta = \frac{1}{BC^u}$.
-        
-        \item Estimasi parameter $(B, C, \gamma)$ secara simultan menggunakan algoritma optimisasi numerik (misalnya, L-BFGS-B dalam R) dengan batasan $B > 0$, $C > 1$:
-        \begin{equation}
-        \{\hat{B}(u), \hat{C}(u), \hat{\gamma}(u)\} = \arg\max_{B, C, \gamma} \ell(B, C, \gamma; u)
-        \end{equation}
-        
-        \item Hitung \textit{profile log-likelihood}: $\ell_p(u) = \ell(\hat{B}(u), \hat{C}(u), \hat{\gamma}(u); u)$
-        
-        \item Jika $\ell_p(u) > \ell_p^*$, update $\ell_p^* = \ell_p(u)$ dan $\hat{u} = u$
-    \end{enumerate}
-    
-    \item \textbf{Output}: 
-    \begin{itemize}
-        \item Usia ambang optimal: $\hat{u}$
-        \item Parameter model: $\{\hat{B}(\hat{u}), \hat{C}(\hat{u}), \hat{\gamma}(\hat{u})\}$
-        \item Parameter derived: $\hat{\theta} = \frac{1}{\hat{B}(\hat{u})\hat{C}(\hat{u})^{\hat{u}}}$
-        \item Jika $\hat{\gamma} < 0$, hitung \textit{highest attained age}: $\hat{\omega} = \hat{u} + \frac{\hat{\theta}}{|\hat{\gamma}|}$
-    \end{itemize}
-\end{enumerate}
+\subsubsection{Fungsi Likelihood}
 
-\subsubsection{Pertimbangan Implementasi}
+Fungsi likelihood untuk model STLT dengan parameter $(B, C, \gamma, u)$ dikonstruksi berdasarkan data agregat kohor dengan struktur yang sama seperti TLT. Dengan mengabaikan konstanta kombinatorial, fungsi log-likelihood adalah:
+\begin{equation}
+\ell(B, C, \gamma; u) = \sum_{x=x_{\text{min}}}^{\tau-1} d_x \ln(S(x) - S(x+1)) + l_\tau \ln(S(\tau)) - l_{x_{\text{min}}} \ln(S(x_{\text{min}})),
+\label{eq:stlt_loglikelihood}
+\end{equation}
+dimana fungsi survival $S(x)$ didefinisikan secara \textit{piecewise} dengan constraint $\theta = \frac{1}{BC^u}$.
 
-Beberapa pertimbangan praktis dalam implementasi estimasi model STLT:
+Karena constraint menghubungkan parameter Gompertz dan GPD, likelihood tidak dapat didekomposisi seperti pada TLT. Estimasi parameter $(B, C, \gamma)$ harus dilakukan secara simultan untuk setiap nilai $u$ yang tetap.
 
-\begin{itemize}
-    \item \textbf{Nilai awal}: Gunakan estimator dari model TLT atau Gompertz sederhana sebagai nilai awal untuk algoritma optimisasi.
-    
-    \item \textbf{Reparameterisasi}: Untuk meningkatkan stabilitas numerik, gunakan transformasi logaritmik: $\alpha = \ln B$, $\delta = \ln(\ln C)$ sehingga tidak perlu constraint $B > 0$ dan $C > 1$.
-    
-    \item \textbf{Validasi konvergensi}: Periksa bahwa algoritma optimisasi mencapai konvergensi (berdasarkan kriteria gradien atau perubahan fungsi objektif) untuk setiap kandidat $u$.
-    
-    \item \textbf{Validitas parameter}: Pastikan estimator memenuhi kondisi regularitas, khususnya $\hat{\gamma} < 0$ untuk konsistensi dengan batas usia maksimum.
-\end{itemize}
+\subsubsection{Pemilihan Usia Ambang Optimal}
 
+Pemilihan usia ambang $u$ menggunakan pendekatan yang sama dengan TLT, yaitu \textit{profile likelihood}. Untuk setiap kandidat nilai $u$ dalam rentang $\{u_{\min}, \ldots, u_{\max}\}$ (umumnya $u_{\min} = 85$ dan $u_{\max} = 100$), parameter $(B, C, \gamma)$ diestimasi dengan memaksimalkan fungsi log-likelihood \eqref{eq:stlt_loglikelihood}. Usia ambang optimal $\hat{u}$ dipilih sebagai nilai yang menghasilkan \textit{profile log-likelihood} maksimum:
+\begin{equation}
+\hat{u} = \arg\max_{u \in \{u_{\min}, \ldots, u_{\max}\}} \ell(\hat{B}(u), \hat{C}(u), \hat{\gamma}(u); u).
+\label{eq:stlt_profile_likelihood_optimal}
+\end{equation}
+
+\textbf{Perbedaan dengan TLT:} Dalam TLT, untuk setiap nilai $u$ tetap, parameter $(B, C)$ dan $(\theta, \gamma)$ dapat diestimasi secara terpisah karena dekomposisi likelihood. Dalam STLT, parameter $(B, C, \gamma)$ harus diestimasi secara simultan menggunakan algoritma optimisasi numerik (misalnya, L-BFGS-B) karena constraint $\theta = \frac{1}{BC^u}$ menghubungkan kedua komponen. Hal ini meningkatkan kompleksitas komputasi, namun memastikan kontinuitas fungsi hazard.
+
+Setelah estimasi, parameter turunan dihitung sebagai $\hat{\theta} = \frac{1}{\hat{B}\hat{C}^{\hat{u}}}$, dan untuk $\hat{\gamma} < 0$, batas atas usia dihitung sebagai $\hat{\omega} = \hat{u} + \frac{\hat{\theta}}{|\hat{\gamma}|}$. Untuk stabilitas numerik, dapat digunakan reparameterisasi $\alpha = \ln B$ dan $\delta = \ln(\ln C)$ sehingga constraint positivity otomatis terpenuhi.
 \section{Model Dynamic Smooth Threshold Life Table (DSTLT)}
 
-Model STLT yang telah dibahas pada bab sebelumnya berhasil mengatasi masalah diskontinuitas fungsi \textit{hazard} yang terdapat pada model TLT. Namun, model STLT tetap bersifat statis yang berarti bahwa model  diestimasi secara terpisah untuk setiap kohor tanpa mempertimbangkan hubungan antar kohor. Keterbatasan ini membatasi kemampuan model STLT untuk melakukan peramalan mortalitas masa depan, yang merupakan kebutuhan krusial dalam aplikasi aktuaria seperti \textit{pricing} produk anuitas dan manajemen risiko longevitas.
+Model STLT yang telah dibahas berhasil mengatasi masalah diskontinuitas fungsi \textit{hazard} yang terdapat pada model TLT. Namun, model STLT tetap bersifat statis, yang berarti model diestimasi secara terpisah untuk setiap kohor tanpa mempertimbangkan hubungan antar kohor. Keterbatasan ini membatasi kemampuan model STLT untuk melakukan peramalan mortalitas masa depan, yang merupakan kebutuhan krusial dalam aplikasi aktuaria seperti \textit{pricing} produk anuitas dan manajemen risiko longevitas.
 
-Subbab ini membahas pengembangan model DSTLT yang mengintegrasikan komponen dinamis ke dalam model STLT. Pengembangan ini dimotivasi oleh observasi empiris terhadap pola parameter model STLT antar kohor dan kebutuhan melakukan peramalan mortalitas yang akurat.
+Bagian ini membahas pengembangan model DSTLT yang mengintegrasikan komponen dinamis ke dalam model STLT, dimotivasi oleh observasi empiris terhadap pola temporal parameter model STLT antar kohor.
 
-\subsection{Keterbatasan Model Statis untuk Peramalan}
+\subsection{Keterbatasan Model Statis dan Motivasi Pengembangan DSTLT}
 
-Model STLT merupakan model statis yang diestimasi secara independen untuk setiap kohor. Pendekatan ini memiliki keterbatasan yaitu estimasi paramater dilakukan untuk setiap kohor, sehingga pola antar kohor tidak teridentifikasi. Hal ini menyebabkan keterbatasan untuk melakukan peramalan.
-
-Dalam konteks aplikasi aktuaria, keterbatasan ini memiliki implikasi praktis yang signifikan. Misalnya, untuk menilai kewajiban dana pensiun yang mencakup beberapa generasi pensiunan, diperlukan proyeksi mortalitas yang konsisten untuk kohor-kohor yang berbeda. Model statis tidak dapat memberikan proyeksi semacam ini tanpa asumsi tambahan yang bersifat \textit{ad hoc}.
-
-Huang et al. (2020) melakukan analisis sistematis terhadap parameter model STLT yang diestimasi untuk kohor kelahiran 1893--1908 di Belanda. Analisis ini mengungkapkan pola temporal yang mencolok pada beberapa parameter, khususnya parameter $B$ dari distribusi Gompertz.
-
-Tabel \ref{tab:stlt_params_female} dan Tabel \ref{tab:stlt_params_male} menyajikan estimasi parameter STLT untuk kohor perempuan dan laki-laki. Data ini memberikan beberapa temuan penting:
-
-\begin{table}[H]
-\centering
-\caption{Variasi parameter estimasi STLT antar kohor, perempuan (Sumber: Huang et al., 2020)}
-\label{tab:stlt_params_female}
-\begin{tabular}{ccccccc}
-\hline
-Kohor & $\hat{B}$ & $\hat{C}$ & $\hat{\theta}$ & $\hat{\gamma}$ & $\hat{\omega}$ & $\hat{u}$ \\
-\hline
-1893 & 0.000031 & 1.1013 & 2.82 & $-0.159$ & 114.74 & 97 \\
-1894 & 0.000029 & 1.1019 & 2.58 & $-0.160$ & 114.13 & 98 \\
-1895 & 0.000028 & 1.1022 & 2.59 & $-0.205$ & 110.67 & 98 \\
-1896 & 0.000026 & 1.1032 & 2.58 & $-0.173$ & 112.95 & 98 \\
-1897 & 0.000024 & 1.1039 & 2.87 & $-0.207$ & 110.88 & 97 \\
-1898 & 0.000021 & 1.1054 & 2.59 & $-0.154$ & 114.77 & 98 \\
-1899 & 0.000020 & 1.1060 & 2.59 & $-0.171$ & 113.10 & 98 \\
-1900 & 0.000017 & 1.1081 & 2.55 & $-0.208$ & 110.24 & 98 \\
-1901 & 0.000015 & 1.1093 & 2.83 & $-0.191$ & 111.78 & 97 \\
-\hline
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\centering
-\caption{Variasi parameter estimasi STLT antar kohor, laki-laki (Sumber: Huang et al., 2020)}
-\label{tab:stlt_params_male}
-\begin{tabular}{ccccccc}
-\hline
-Kohor & $\hat{B}$ & $\hat{C}$ & $\hat{\theta}$ & $\hat{\gamma}$ & $\hat{\omega}$ & $\hat{u}$ \\
-\hline
-1893 & 0.000071 & 1.0945 & 4.55 & $-0.221$ & 109.55 & 89 \\
-1894 & 0.000078 & 1.0934 & 3.78 & $-0.195$ & 110.42 & 91 \\
-1895 & 0.000086 & 1.0920 & 4.20 & $-0.221$ & 109.00 & 90 \\
-1896 & 0.000103 & 1.0895 & 2.18 & $-0.176$ & 110.38 & 98 \\
-1897 & 0.000119 & 1.0877 & 2.21 & $-0.179$ & 110.37 & 98 \\
-1898 & 0.000104 & 1.0896 & 2.15 & $-0.151$ & 112.27 & 98 \\
-1899 & 0.000112 & 1.0885 & 2.84 & $-0.179$ & 110.82 & 95 \\
-1900 & 0.000106 & 1.0893 & 2.56 & $-0.134$ & 115.17 & 96 \\
-1901 & 0.000118 & 1.0878 & 3.10 & $-0.181$ & 111.12 & 94 \\
-\hline
-\end{tabular}
-\end{table}
-
-Dari tabel tersebut, beberapa pola yang dapat diidentifikasi adalah:
+Model statis seperti STLT memiliki beberapa keterbatasan fundamental untuk aplikasi peramalan mortalitas:
 
 \begin{enumerate}
-\item \textbf{Parameter $B$ (Perempuan)}: Menunjukkan tren menurun yang konsisten dan jelas dari kohor 1893 hingga 1901. Nilai $\hat{B}$ menurun dari 0.000031 (kohor 1893) menjadi 0.000015 (kohor 1901), suatu penurunan sekitar 52\%. Pola ini mengindikasikan adanya perbaikan mortalitas yang sistematis pada tingkat mortalitas dasar (\textit{baseline mortality level}) antar generasi.
+    \item \textbf{Tidak menangkap tren temporal}: Estimasi dilakukan secara independen untuk setiap kohor, sehingga pola sistematik perubahan mortalitas antar generasi tidak teridentifikasi.
 
-\item \textbf{Parameter $B$ (Laki-laki)}: Menunjukkan pola yang berbeda dari perempuan. Untuk tiga kohor pertama (1893--1895), terdapat tren meningkat dari 0.000071 menjadi 0.000086. Setelah itu, nilai $\hat{B}$ cenderung stabil dengan fluktuasi di sekitar 0.000104--0.000119.
+    \item \textbf{Tidak dapat melakukan proyeksi}: Untuk memproyeksikan mortalitas kohor masa depan, model statis memerlukan asumsi tambahan yang bersifat \textit{ad hoc}.
 
-\item \textbf{Parameter $C$}: Untuk perempuan, $\hat{C}$ menunjukkan tren meningkat dari 1.1013 (kohor 1893) menjadi 1.1093 (kohor 1901). Untuk laki-laki, tren berlawanan diamati: $\hat{C}$ menurun dari 1.0945 menjadi 1.0878. Namun, variasi relatif parameter $C$ jauh lebih kecil dibandingkan variasi parameter $B$. Secara keseluruhan, perubahan $C$ kurang dari 1\%, sementara perubahan $B$ mencapai lebih dari 50\%.
-
-\item \textbf{Parameter $\gamma$, $\theta$, dan $u$}: Tidak menunjukkan pola temporal yang konsisten atau tren yang jelas untuk kedua jenis kelamin. Nilai-nilai parameter ini berfluktuasi tanpa arah yang sistematis antar kohor. Temuan ini konsisten dengan hasil Einmahl et al. (2019) pada data yang sama.
+    \item \textbf{Keterbatasan praktis}: Dalam aplikasi aktuaria seperti penilaian kewajiban dana pensiun multi-generasi, diperlukan proyeksi mortalitas yang konsisten untuk kohor-kohor yang berbeda, yang tidak dapat diberikan oleh model statis.
 \end{enumerate}
 
-Berdasarkan observasi empiris di atas, Huang memutuskan untuk memodelkan $\log(B)$ sebagai fungsi linear dari waktu. Hal ini juga konsisten dengan penelitian yang dilakukan oleh Cairns et al. pada tahun 2006. Cairns et al. (2006) dalam model CBD (\textit{Cairns-Blake-Dowd}) juga memodelkan komponen tingkat mortalitas sebagai \textit{random walk with drift}, yang secara konseptual serupa dengan spesifikasi $B_i = \exp(a + bi)$.
+\subsection{Temuan Empiris Huang et al. (2020)}
 
-\subsection{Fungsi \textit{Likelihood} untuk Model DSTLT}
+\citet{huang2020modelling} melakukan analisis sistematis terhadap parameter model STLT yang diestimasi untuk kohor kelahiran 1893--1908 di Belanda. Analisis ini mengungkapkan beberapa pola temporal yang penting:
 
-Fungsi likelihood untuk model DSTLT dibangun dengan menggabungkan likelihood dari setiap kohor dalam training set, dengan mempertimbangkan struktur dinamis parameter dan constraint yang telah dibahas.
+\begin{enumerate}
+    \item \textbf{Parameter $B$ menunjukkan tren temporal yang jelas}: Untuk kohor perempuan, nilai $\hat{B}$ menurun secara konsisten dari 0.000031 (kohor 1893) menjadi 0.000015 (kohor 1901), suatu penurunan sekitar 52\%. Pola ini mengindikasikan adanya perbaikan mortalitas yang sistematis pada tingkat mortalitas dasar (\textit{baseline mortality level}) antar generasi.
 
-\subsubsection{Likelihood untuk Kohor Tunggal}
+    \item \textbf{Parameter $C$ menunjukkan variasi yang jauh lebih kecil}: Perubahan parameter $C$ kurang dari 1\% antar kohor, sementara perubahan $B$ mencapai lebih dari 50\%. Hal ini menunjukkan bahwa perbaikan mortalitas terutama terjadi pada tingkat mortalitas dasar, bukan pada laju akselerasi mortalitas.
 
-Untuk kohor $i$ dengan parameter dinamis $B_i$ dan $C_i$, likelihood memiliki bentuk yang analog dengan STLT, namun dengan parameter yang bergantung pada $i$:
+    \item \textbf{Parameter $\gamma$, $\theta$, dan $u$ tidak menunjukkan pola temporal yang konsisten}: Nilai-nilai parameter ini berfluktuasi tanpa arah yang sistematis antar kohor. Temuan ini konsisten dengan hasil \citet{einmahl2019modeling} pada data yang sama.
+\end{enumerate}
 
-\begin{equation}
-L_i(a, b, \theta, \gamma; u) = \prod_{x=x_{\min}}^{N-1} \left(\frac{S_i(x) - S_i(x+1)}{S_i(x_{\min})}\right)^{d_{x,i}} \times \prod_{x=u}^{\tau_i-1} \left(\frac{S_i(x) - S_i(x+1)}{S_i(x_{\min})}\right)^{d_{x,i}} \times \left(\frac{S_i(\tau_i)}{S_i(x_{\min})}\right)^{l_{\tau_i,i}}
-\label{eq:dstlt_likelihood_single}
-\end{equation}
+Berdasarkan observasi empiris ini, Huang et al. memutuskan untuk memodelkan parameter $B$ sebagai fungsi yang bervariasi antar kohor, sementara parameter lainnya ($\gamma$, $\theta$, $u$) diperlakukan sebagai konstan antar kohor.
 
-dimana:
+\subsection{Pemilihan Parameter Dinamis dan Konsistensi dengan Cairns et al.}
+
+Keputusan untuk mendinamisasi parameter $B$ didasarkan pada beberapa pertimbangan:
+
+\begin{enumerate}
+    \item \textbf{Bukti empiris yang kuat}: Tren temporal parameter $B$ jelas dan konsisten, dengan variasi antar kohor yang signifikan (> 50\%).
+
+    \item \textbf{Interpretasi yang masuk akal}: Parameter $B$ merepresentasikan tingkat mortalitas dasar, yang secara intuitif dapat berubah antar generasi akibat perbaikan kondisi kesehatan, nutrisi, dan layanan medis.
+
+    \item \textbf{Konsistensi dengan literatur}: Pemilihan ini konsisten dengan penelitian \citet{cairns2006pricing} dalam model Cairns-Blake-Dowd (CBD). Cairns et al. memodelkan komponen tingkat mortalitas sebagai \textit{random walk with drift}, yang secara konseptual serupa dengan spesifikasi $B_i = \exp(a + bi)$ dalam DSTLT.
+\end{enumerate}
+
+Model CBD, yang merupakan salah satu model mortalitas stokastik paling berpengaruh dalam aktuaria, juga mengidentifikasi bahwa komponen tingkat mortalitas (bukan slope) yang memiliki tren temporal paling dominan. Temuan Huang et al. untuk parameter $B$ dalam STLT paralel dengan temuan Cairns et al. untuk parameter $\kappa_t^{(1)}$ dalam CBD, memberikan validasi silang dari dua pendekatan metodologi yang berbeda.
+
+\subsection{Formulasi Model DSTLT}
+
+Model DSTLT mempertahankan struktur \textit{piecewise} dari STLT, namun dengan parameter Gompertz yang bervariasi antar kohor. Misalkan $i$ adalah indeks kohor, model DSTLT didefinisikan sebagai berikut:
+
+\subsubsection{Struktur Parameter Dinamis}
+
+Parameter model DSTLT terdiri dari:
 \begin{itemize}
-\item $x_{\min}$ adalah usia awal pengamatan (umumnya 65 tahun)
-\item $\tau_i$ adalah usia maksimum observasi untuk kohor $i$
-\item $d_{x,i}$ adalah jumlah kematian pada interval usia $[x, x+1)$ untuk kohor $i$
-\item $l_{\tau_i,i}$ adalah jumlah individu yang tersensor kanan pada usia $\tau_i$ untuk kohor $i$
-\item $S_i(x)$ adalah fungsi survival yang didefinisikan secara piecewise
+    \item \textbf{Parameter dinamis}: $B_i = \exp(a + bi)$, dimana $a$ dan $b$ adalah parameter yang mengatur level dan tren temporal mortalitas dasar.
+    \item \textbf{Parameter konstan}: $\gamma$, $\theta$, dan $u$ diasumsikan konstan antar kohor.
 \end{itemize}
 
-\paragraph{Fungsi Survival untuk Kohor $i$:}
-
-Untuk $x \leq N$ (bagian Gompertz):
+Dengan \textit{smoothing constraint}, parameter $C_i$ tidak lagi independen tetapi ditentukan secara implisit melalui hubungan $\theta = \frac{1}{B_i C_i^u}$, yang dapat ditulis sebagai:
 \begin{equation}
-S_i(x) = \exp\left(-\frac{B_i}{\ln C_i}(C_i^x - 1)\right)
-\label{eq:dstlt_survival_gompertz}
+C_i = \left(\frac{1}{B_i \theta}\right)^{1/u} = \left(\frac{1}{\exp(a+bi) \theta}\right)^{1/u}.
+\label{eq:dstlt_c_constraint}
 \end{equation}
 
-Substitusi $B_i = \exp(a + bi)$ dan $C_i = \theta^{-1/N} \exp(-(a+bi)/N)$, sehingga fungsi survival menjadi:
+Dengan demikian, model DSTLT memiliki empat parameter bebas: $(a, b, \gamma, u)$, dengan $\theta$ dan $C_i$ ditentukan oleh constraint.
+
+\subsubsection{Komponen Model untuk Kohor $i$}
+
+Untuk kohor $i$, fungsi survival didefinisikan secara \textit{piecewise}:
+
+\paragraph{Bagian Gompertz ($x \leq u$):}
 \begin{equation}
-S_i(x) = \exp\left(\frac{N \text{exp}(a+bi)}{\ln\theta +a+bi} \cdot \theta^{-x/N}(\text{exp}(a+bi) x/N - 1)\right), \quad x \leq N
-\label{eq:dstlt_survival_gompertz_explicit}
+S_i(x) = \exp\left(-\frac{B_i}{\ln C_i}(C_i^x - 1)\right), \quad x \leq u,
+\label{eq:dstlt_gompertz_survival}
+\end{equation}
+dengan $B_i = \exp(a + bi)$ dan $C_i$ diberikan oleh persamaan \eqref{eq:dstlt_c_constraint}.
+
+\paragraph{Bagian GPD ($x > u$):}
+\begin{equation}
+S_i(x) = S_i(u) \left(1 + \gamma \cdot B_i C_i^u(x-u)\right)^{-1/\gamma}, \quad x > u.
+\label{eq:dstlt_gpd_survival}
 \end{equation}
 
-Untuk $x > u$ (bagian GPD):
+Perhatikan bahwa $B_i C_i^u = \frac{1}{\theta}$ untuk semua $i$ karena \textit{smoothing constraint}, sehingga bagian GPD menjadi:
 \begin{equation}
-S_i(x) = S_i(u) \cdot \left(1 + \gamma\frac{x-u}{\theta}\right)^{-1/\gamma}, \quad \gamma \neq 0
-\label{eq:dstlt_survival_gpd}
+S_i(x) = S_i(u) \left(1 + \frac{\gamma(x-u)}{\theta}\right)^{-1/\gamma}, \quad x > u.
+\label{eq:dstlt_gpd_survival_simplified}
 \end{equation}
 
-\subsubsection{Likelihood untuk Kohor Gabungan}
+Formulasi ini menunjukkan bahwa variasi antar kohor hanya terjadi pada bagian Gompertz (melalui $B_i$ dan $C_i$), sementara bagian GPD tetap sama untuk semua kohor. Hal ini konsisten dengan observasi empiris bahwa karakteristik ekor distribusi ($\gamma$) tidak menunjukkan tren temporal yang jelas.
 
-Dengan asumsi bahwa kohor-kohor dalam training set independen (yaitu, tidak ada korelasi residual antar kohor), joint likelihood adalah produk dari likelihood individu:
+\subsection{Estimasi Parameter Model DSTLT}
 
+Estimasi parameter model DSTLT menggunakan data gabungan dari beberapa kohor dalam periode \textit{training}. Dengan asumsi bahwa kohor-kohor independen, fungsi log-likelihood gabungan adalah:
 \begin{equation}
-L(a, b, \theta, \gamma; u) = \prod_{i=1}^{r} L_i(a, b, \theta, \gamma; u)
-\label{eq:dstlt_joint_likelihood}
-\end{equation}
-
-dimana $r$ adalah jumlah kohor dalam training set.
-
-Dalam bentuk log-likelihood:
-\begin{equation}
-\ell(a, b, \theta, \gamma; u) = \sum_{i=1}^{r} \ell_i(a, b, \theta, \gamma; u)
+\ell(a, b, \gamma; u) = \sum_{i=1}^{r} \ell_i(a, b, \gamma; u),
 \label{eq:dstlt_joint_loglikelihood}
 \end{equation}
+dimana $r$ adalah jumlah kohor dalam \textit{training set}, dan $\ell_i(a, b, \gamma; u)$ adalah log-likelihood untuk kohor $i$:
+\begin{equation}
+\begin{split}
+\ell_i(a, b, \gamma; u) = &\sum_{x=x_{\text{min}}}^{\tau_i-1} d_{x,i} \ln(S_i(x) - S_i(x+1)) \\
+&+ l_{\tau_i,i} \ln(S_i(\tau_i)) - l_{x_{\text{min}},i} \ln(S_i(x_{\text{min}})).
+\end{split}
+\label{eq:dstlt_single_loglikelihood}
+\end{equation}
 
-\begin{align}
-\ell(a, b, \theta, \gamma; u) = \sum_{i=1}^{r} \Bigg[ &\sum_{x=x_{\min}}^{N-1} d_{x,i} \ln\big(S_i(x) - S_i(x+1)\big) \nonumber \\
-&+ \sum_{x=u}^{\tau_i-1} d_{x,i} \ln\big(S_i(x) - S_i(x+1)\big) \nonumber \\
-&+ l_{\tau_i,i} \ln S_i(\tau_i) - l_{x_{\min},i} \ln S_i(x_{\min}) \Bigg]
-\label{eq:dstlt_loglik_expanded}
-\end{align}
+Parameter $(a, b, \gamma)$ diestimasi dengan memaksimalkan fungsi log-likelihood gabungan \eqref{eq:dstlt_joint_loglikelihood} untuk setiap nilai $u$ tetap. Usia ambang optimal $\hat{u}$ dipilih menggunakan \textit{profile likelihood}, serupa dengan STLT. Setelah estimasi, parameter $\theta$ dihitung secara konsisten dari constraint, dan proyeksi untuk kohor masa depan dilakukan dengan mengekstrapolasi $B_i = \exp(a + bi)$ untuk nilai $i$ yang lebih besar.
 
-dimana $S_i(x)$ diberikan oleh persamaan \eqref{eq:dstlt_survival_gompertz_explicit} untuk $x \leq N$ dan persamaan \eqref{eq:dstlt_survival_gpd} untuk $x > u$.
-
+Perbedaan utama dengan STLT adalah bahwa DSTLT melakukan estimasi secara simultan untuk semua kohor dalam \textit{training set}, sehingga dapat menangkap tren temporal dan melakukan proyeksi untuk kohor masa depan secara konsisten.
