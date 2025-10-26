@@ -62,7 +62,7 @@ Pemahaman terhadap mekanisme penyensoran ini sangat penting dalam konstruksi fun
 
 \section{Model Mortalitas Statis}
 
-Model mortalitas statis merupakan model parametrik yang menggambarkan pola kematian sebagai fungsi dari usia tanpa mempertimbangkan dimensi waktu atau perubahan antarkohor. Model-model ini telah digunakan secara luas dalam praktik aktuaria untuk memodelkan tabel mortalitas pada berbagai rentang usia. Bagian ini membahas beberapa model mortalitas statis yang relevan sebagai pembanding terhadap model STLT dalam penelitian ini, meliputi model Gompertz-Makeham, model Heligman-Pollard, dan metode Coale-Kisker \citep{huang2020modelling, dickson2020actuarial}.
+Model mortalitas statis merupakan model parametrik yang menggambarkan pola kematian sebagai fungsi dari usia tanpa mempertimbangkan dimensi waktu atau perubahan antarkohor. Model-model ini telah digunakan secara luas dalam praktik aktuaria untuk memodelkan tabel mortalitas pada berbagai rentang usia. Bagian ini membahas beberapa model mortalitas statis yang relevan sebagai pembanding terhadap model STLT dalam penelitian ini, meliputi model Gompertz-Makeham, model logistik (Perks, Beard, Kannisto), model Heligman-Pollard, dan metode Coale-Kisker \citep{huang2020modelling, dickson2020actuarial}.
 
 \subsection{Model Gompertz-Makeham}
 
@@ -204,7 +204,50 @@ Para peneliti ini menyebut $\alpha = \alpha(\xi)$ sebagai \textit{perseverance p
 
 Teorema Pickands-Balkema-de Haan memberikan justifikasi teoretis untuk pendekatan POT dalam pemodelan mortalitas usia lanjut. Dalam praktik, untuk menerapkan hasil ini, perlu ditentukan usia ambang $u$ (atau $x^*$) sedemikian sehingga aproksimasi GPD cukup akurat untuk $x \geq u$. Pemilihan usia ambang yang tepat merupakan aspek krusial dalam implementasi model berbasis EVT, dan akan dibahas lebih lanjut dalam konteks konstruksi model \textit{Threshold Life Table} pada sub-bab berikutnya.
 
-\section{Model Mortalitas Dinamis: Model Cairns-Blake-Dowd (CBD)}
+\section{Model Mortalitas Dinamis}
+
+\subsection{Model Watts-Dupuis-Jones (WDJ)}
+
+Model Watts-Dupuis-Jones (WDJ) yang dikembangkan oleh \citet{watts2006extreme} merupakan salah satu aplikasi pertama Extreme Value Theory untuk memodelkan tren temporal usia kematian tertinggi. Model ini menggunakan pendekatan block maxima dengan Generalized Extreme Value (GEV) distribution.
+
+\subsubsection{Spesifikasi Model}
+
+Model WDJ menggunakan distribusi GEV untuk memodelkan usia kematian maksimum yang diamati setiap tahun. Fungsi distribusi GEV didefinisikan sebagai:
+\begin{equation}
+F(z) = \begin{cases}
+\exp\left(-(1 + \xi(z - \mu)/\sigma)^{-1/\xi}\right), & \xi \neq 0, \\
+\exp(-\exp(-(z - \mu)/\sigma)), & \xi = 0,
+\end{cases}
+\label{eq:gev_distribution}
+\end{equation}
+dimana:
+\begin{itemize}
+    \item $\mu$ adalah parameter lokasi (location parameter)
+    \item $\sigma > 0$ adalah parameter skala (scale parameter)
+    \item $\xi$ adalah parameter bentuk (shape parameter atau tail index)
+\end{itemize}
+
+\subsubsection{Pemodelan Temporal}
+
+Untuk menangkap tren perubahan usia maksimum dari waktu ke waktu, model WDJ memodelkan parameter lokasi $\mu$ dan skala $\sigma$ sebagai fungsi linear dari tahun kalender:
+\begin{align}
+\mu(t) &= \mu_0 + \mu_1 t^*, \label{eq:wdj_mu} \\
+\sigma(t) &= \exp(\sigma_0 + \sigma_1 t^*), \label{eq:wdj_sigma}
+\end{align}
+dimana $t^* = (t - t_0)/\Delta t$ adalah tahun yang distandarisasi, dengan $t_0$ sebagai tahun referensi dan $\Delta t$ sebagai rentang waktu observasi.
+
+Parameter bentuk $\xi$ diasumsikan konstan antar waktu, mencerminkan asumsi bahwa karakteristik ekor distribusi usia maksimum relatif stabil secara struktural.
+
+\subsubsection{Interpretasi Parameter}
+
+Parameter temporal memiliki interpretasi sebagai berikut:
+\begin{itemize}
+    \item \textbf{$\mu_1$}: Laju perubahan usia maksimum per unit waktu. Nilai $\mu_1 > 0$ mengindikasikan peningkatan usia maksimum dari waktu ke waktu.
+    
+    \item \textbf{$\sigma_1$}: Laju perubahan variabilitas usia maksimum. Transformasi eksponensial untuk $\sigma$ memastikan parameter skala selalu positif.
+\end{itemize}
+
+\subsection{Model Cairns-Blake-Dowd (CBD)}
 
 Model mortalitas dinamis menangkap perubahan pola mortalitas dari waktu ke waktu, yang penting untuk melakukan proyeksi mortalitas masa depan. Berbeda dengan model statis yang mengasumsikan parameter tetap, model dinamis memodelkan parameter sebagai fungsi waktu atau kohor. Salah satu contoh model mortalitas dinamis adalah Model Cairns-Blake-Dowd (CBD).
 
